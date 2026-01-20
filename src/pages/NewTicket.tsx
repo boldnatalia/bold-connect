@@ -53,22 +53,20 @@ export default function NewTicket() {
     }
 
     setIsLoading(true);
-    try {
-      createTicket(
-        { title: title.trim(), description: description.trim() },
-        {
-          onSuccess: () => {
-            toast.success('Chamado aberto com sucesso!');
-            navigate('/tickets');
-          },
-          onError: () => {
-            setError('Erro ao abrir chamado. Tente novamente.');
-          },
-        }
-      );
-    } finally {
-      setIsLoading(false);
-    }
+    createTicket(
+      { title: title.trim(), description: description.trim() },
+      {
+        onSuccess: () => {
+          toast.success('Chamado aberto com sucesso!');
+          setIsLoading(false);
+          navigate('/tickets');
+        },
+        onError: () => {
+          setError('Erro ao abrir chamado. Tente novamente.');
+          setIsLoading(false);
+        },
+      }
+    );
   };
 
   return (
