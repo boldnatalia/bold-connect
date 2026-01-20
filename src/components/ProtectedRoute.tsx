@@ -9,7 +9,7 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRouteProps) {
-  const { user, isAdmin, isLoading, profile } = useAuth();
+  const { user, isAdmin, isLoading } = useAuth();
   const location = useLocation();
 
   if (isLoading) {
@@ -24,12 +24,7 @@ export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRout
   }
 
   if (!user) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
-  }
-
-  // If user is logged in but doesn't have a profile, redirect to complete registration
-  if (!profile && location.pathname !== '/complete-profile') {
-    return <Navigate to="/complete-profile" replace />;
+    return <Navigate to="/welcome" state={{ from: location }} replace />;
   }
 
   if (requireAdmin && !isAdmin) {

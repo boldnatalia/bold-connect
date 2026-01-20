@@ -1,59 +1,71 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, Eye, EyeOff } from 'lucide-react';
+import { Loader2, ArrowLeft, CheckCircle } from 'lucide-react';
 import { z } from 'zod';
 
-const loginSchema = z.object({
+const emailSchema = z.object({
   email: z.string().email('Email inválido'),
-  password: z.string().min(6, 'Senha deve ter pelo menos 6 caracteres'),
 });
 
-export default function Login() {
+export default function ForgotPassword() {
   const navigate = useNavigate();
-  const { signIn, user, isLoading: authLoading } = useAuth();
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-
-  // Redirect if already logged in
-  useEffect(() => {
-    if (user && !authLoading) {
-      navigate('/');
-    }
-  }, [user, authLoading, navigate]);
+  const [isSuccess, setIsSuccess] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
-    const validation = loginSchema.safeParse({ email, password });
+    const validation = emailSchema.safeParse({ email });
     if (!validation.success) {
       setError(validation.error.errors[0].message);
       return;
     }
 
     setIsLoading(true);
-    const { error } = await signIn(email, password);
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
     setIsLoading(false);
 
     if (error) {
-      if (error.message.includes('Invalid login credentials')) {
-        setError('Email ou senha incorretos');
-      } else {
-        setError('Erro ao fazer login. Tente novamente.');
-      }
+      setError('Erro ao enviar email. Tente novamente.');
     } else {
-      navigate('/');
+      setIsSuccess(true);
     }
   };
+
+  if (isSuccess) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-background">
+        <div className="w-full max-w-sm space-y-6">
+          <div className="flex flex-col items-center gap-3">
+          <div className="h-16 w-16 rounded-2xl bg-primary flex items-center justify-center shadow-lg">
+            <CheckCircle className="h-8 w-8 text-primary-foreground" />
+          </div>
+            <div className="text-center">
+              <h1 className="text-2xl font-bold text-foreground">Email Enviado!</h1>
+              <p className="text-muted-foreground text-sm mt-2">
+                Verifique sua caixa de entrada e siga as instruções para redefinir sua senha.
+              </p>
+            </div>
+          </div>
+
+          <Button className="w-full" onClick={() => navigate('/login')}>
+            Voltar para o Login
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-background">
@@ -65,15 +77,15 @@ export default function Login() {
           </div>
           <div className="text-center">
             <h1 className="text-2xl font-bold text-foreground">Bold Workplace</h1>
-            <p className="text-muted-foreground text-sm">Bem-vindo</p>
+            <p className="text-muted-foreground text-sm">Recuperar senha</p>
           </div>
         </div>
 
         <Card className="border-0 shadow-lg">
           <CardHeader className="space-y-1">
-            <CardTitle className="text-xl">Entrar</CardTitle>
+            <CardTitle className="text-xl">Esqueceu sua senha?</CardTitle>
             <CardDescription>
-              Digite suas credenciais para acessar sua conta
+              Insira seu email para receber as instruções de recuperação
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -97,57 +109,28 @@ export default function Login() {
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="password">Senha</Label>
-                <div className="relative">
-                  <Input
-                    id="password"
-                    type={showPassword ? 'text' : 'password'}
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    disabled={isLoading}
-                    autoComplete="current-password"
-                    className="pr-10"
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
-                    onClick={() => setShowPassword(!showPassword)}
-                  >
-                    {showPassword ? (
-                      <EyeOff className="h-4 w-4 text-muted-foreground" />
-                    ) : (
-                      <Eye className="h-4 w-4 text-muted-foreground" />
-                    )}
-                  </Button>
-                </div>
-              </div>
-
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Entrando...
+                    Enviando...
                   </>
                 ) : (
-                  'Entrar'
+                  'Enviar email de recuperação'
                 )}
               </Button>
             </form>
           </CardContent>
         </Card>
 
-        <div className="text-center">
-          <Link 
-            to="/forgot-password" 
-            className="text-sm text-muted-foreground hover:text-primary hover:underline"
-          >
-            Esqueceu sua senha?
-          </Link>
-        </div>
+        <Button
+          variant="ghost"
+          className="w-full"
+          onClick={() => navigate('/login')}
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Voltar para o Login
+        </Button>
       </div>
     </div>
   );
