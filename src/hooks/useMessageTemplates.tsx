@@ -72,9 +72,11 @@ export function useMessageTemplates() {
     templates: templatesQuery.data ?? [],
     isLoading: templatesQuery.isLoading,
     error: templatesQuery.error,
-    createTemplate,
-    updateTemplate,
-    deleteTemplate,
+    createTemplate: createTemplate.mutate,
+    updateTemplate: updateTemplate.mutate,
+    deleteTemplate: deleteTemplate.mutate,
+    isCreating: createTemplate.isPending,
+    isUpdating: updateTemplate.isPending,
     refetch: templatesQuery.refetch,
   };
 }

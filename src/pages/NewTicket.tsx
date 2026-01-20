@@ -54,11 +54,18 @@ export default function NewTicket() {
 
     setIsLoading(true);
     try {
-      await createTicket.mutateAsync({ title: title.trim(), description: description.trim() });
-      toast.success('Chamado aberto com sucesso!');
-      navigate('/tickets');
-    } catch (err) {
-      setError('Erro ao abrir chamado. Tente novamente.');
+      createTicket(
+        { title: title.trim(), description: description.trim() },
+        {
+          onSuccess: () => {
+            toast.success('Chamado aberto com sucesso!');
+            navigate('/tickets');
+          },
+          onError: () => {
+            setError('Erro ao abrir chamado. Tente novamente.');
+          },
+        }
+      );
     } finally {
       setIsLoading(false);
     }

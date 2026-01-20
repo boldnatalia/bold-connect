@@ -42,11 +42,15 @@ export function useTickets() {
     },
   });
 
-  const updateTicketStatus = useMutation({
-    mutationFn: async ({ id, status, admin_notes }: { id: string; status: TicketStatus; admin_notes?: string }) => {
+  const updateTicket = useMutation({
+    mutationFn: async ({ id, status, admin_notes }: { id: string; status?: TicketStatus; admin_notes?: string }) => {
+      const updates: { status?: TicketStatus; admin_notes?: string } = {};
+      if (status) updates.status = status;
+      if (admin_notes !== undefined) updates.admin_notes = admin_notes;
+      
       const { data, error } = await supabase
         .from('tickets')
-        .update({ status, admin_notes })
+        .update(updates)
         .eq('id', id)
         .select()
         .single();
@@ -63,8 +67,10 @@ export function useTickets() {
     tickets: ticketsQuery.data ?? [],
     isLoading: ticketsQuery.isLoading,
     error: ticketsQuery.error,
-    createTicket,
-    updateTicketStatus,
+    createTicket: createTicket.mutate,
+    updateTicket: updateTicket.mutate,
+    isCreating: createTicket.isPending,
+    isUpdating: updateTicket.isPending,
     refetch: ticketsQuery.refetch,
   };
 }

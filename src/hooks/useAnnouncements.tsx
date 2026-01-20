@@ -72,9 +72,11 @@ export function useAnnouncements() {
     announcements: announcementsQuery.data ?? [],
     isLoading: announcementsQuery.isLoading,
     error: announcementsQuery.error,
-    createAnnouncement,
-    updateAnnouncement,
-    deleteAnnouncement,
+    createAnnouncement: createAnnouncement.mutate,
+    updateAnnouncement: updateAnnouncement.mutate,
+    deleteAnnouncement: deleteAnnouncement.mutate,
+    isCreating: createAnnouncement.isPending,
+    isUpdating: updateAnnouncement.isPending,
     refetch: announcementsQuery.refetch,
   };
 }

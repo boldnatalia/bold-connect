@@ -22,10 +22,17 @@ export function useMenu() {
   });
 
   const createMenuItem = useMutation({
-    mutationFn: async (item: Omit<MenuItem, 'id' | 'created_at' | 'updated_at'>) => {
+    mutationFn: async (item: { name: string; description?: string | null; price: number; category?: string | null; is_available?: boolean; image_url?: string | null }) => {
       const { data, error } = await supabase
         .from('menu_items')
-        .insert(item)
+        .insert({
+          name: item.name,
+          description: item.description ?? null,
+          price: item.price,
+          category: item.category ?? null,
+          is_available: item.is_available ?? true,
+          image_url: item.image_url ?? null,
+        })
         .select()
         .single();
 
@@ -72,9 +79,11 @@ export function useMenu() {
     menuItems: menuQuery.data ?? [],
     isLoading: menuQuery.isLoading,
     error: menuQuery.error,
-    createMenuItem,
-    updateMenuItem,
-    deleteMenuItem,
+    createMenuItem: createMenuItem.mutate,
+    updateMenuItem: updateMenuItem.mutate,
+    deleteMenuItem: deleteMenuItem.mutate,
+    isCreating: createMenuItem.isPending,
+    isUpdating: updateMenuItem.isPending,
     refetch: menuQuery.refetch,
   };
 }
