@@ -2,8 +2,30 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider } from "@/hooks/useAuth";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
+
+// Public pages
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+
+// User pages
+import Home from "./pages/Home";
+import Tickets from "./pages/Tickets";
+import NewTicket from "./pages/NewTicket";
+import Announcements from "./pages/Announcements";
+import Menu from "./pages/Menu";
+import Floors from "./pages/Floors";
+import Manual from "./pages/Manual";
+
+// Admin pages
+import AdminDashboard from "./pages/admin/Dashboard";
+import AdminTickets from "./pages/admin/Tickets";
+import AdminAnnouncements from "./pages/admin/Announcements";
+import AdminTemplates from "./pages/admin/Templates";
+import AdminMenu from "./pages/admin/Menu";
+
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -11,15 +33,36 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
+      <AuthProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            {/* Public routes */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+
+            {/* Protected user routes */}
+            <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
+            <Route path="/tickets" element={<ProtectedRoute><Tickets /></ProtectedRoute>} />
+            <Route path="/tickets/new" element={<ProtectedRoute><NewTicket /></ProtectedRoute>} />
+            <Route path="/announcements" element={<ProtectedRoute><Announcements /></ProtectedRoute>} />
+            <Route path="/menu" element={<ProtectedRoute><Menu /></ProtectedRoute>} />
+            <Route path="/floors" element={<ProtectedRoute><Floors /></ProtectedRoute>} />
+            <Route path="/manual" element={<ProtectedRoute><Manual /></ProtectedRoute>} />
+
+            {/* Protected admin routes */}
+            <Route path="/admin" element={<ProtectedRoute requireAdmin><AdminDashboard /></ProtectedRoute>} />
+            <Route path="/admin/tickets" element={<ProtectedRoute requireAdmin><AdminTickets /></ProtectedRoute>} />
+            <Route path="/admin/announcements" element={<ProtectedRoute requireAdmin><AdminAnnouncements /></ProtectedRoute>} />
+            <Route path="/admin/templates" element={<ProtectedRoute requireAdmin><AdminTemplates /></ProtectedRoute>} />
+            <Route path="/admin/menu" element={<ProtectedRoute requireAdmin><AdminMenu /></ProtectedRoute>} />
+
+            {/* Catch all */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );
