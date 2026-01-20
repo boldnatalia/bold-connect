@@ -10,7 +10,8 @@ import {
   UtensilsCrossed,
   LogOut,
   ChevronLeft,
-  Menu
+  Menu,
+  Users
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -23,6 +24,7 @@ interface AdminLayoutProps {
 
 const navItems = [
   { path: '/admin', label: 'Dashboard', icon: LayoutDashboard },
+  { path: '/admin/users', label: 'Usuários', icon: Users },
   { path: '/admin/tickets', label: 'Chamados', icon: MessageSquare },
   { path: '/admin/announcements', label: 'Avisos', icon: Bell },
   { path: '/admin/templates', label: 'Templates', icon: FileText },

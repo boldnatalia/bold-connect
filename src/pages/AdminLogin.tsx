@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, Eye, EyeOff } from 'lucide-react';
+import { Loader2, Eye, EyeOff, ArrowLeft, Shield } from 'lucide-react';
 import { z } from 'zod';
 
 const loginSchema = z.object({
@@ -14,21 +14,21 @@ const loginSchema = z.object({
   password: z.string().min(6, 'Senha deve ter pelo menos 6 caracteres'),
 });
 
-export default function Login() {
+export default function AdminLogin() {
   const navigate = useNavigate();
-  const { signIn, user, isLoading: authLoading } = useAuth();
+  const { signIn, user, isAdmin, isLoading: authLoading } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  // Redirect if already logged in
+  // Redirect if already logged in as admin
   useEffect(() => {
-    if (user && !authLoading) {
-      navigate('/');
+    if (user && isAdmin && !authLoading) {
+      navigate('/admin');
     }
-  }, [user, authLoading, navigate]);
+  }, [user, isAdmin, authLoading, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,17 +42,21 @@ export default function Login() {
 
     setIsLoading(true);
     const { error } = await signIn(email, password);
-    setIsLoading(false);
-
+    
     if (error) {
+      setIsLoading(false);
       if (error.message.includes('Invalid login credentials')) {
         setError('Email ou senha incorretos');
       } else {
         setError('Erro ao fazer login. Tente novamente.');
       }
-    } else {
-      navigate('/');
+      return;
     }
+    
+    // Wait a bit for auth state to update and check admin status
+    setTimeout(() => {
+      setIsLoading(false);
+    }, 1000);
   };
 
   return (
@@ -61,19 +65,19 @@ export default function Login() {
         {/* Logo */}
         <div className="flex flex-col items-center gap-3">
           <div className="h-16 w-16 rounded-2xl bg-primary flex items-center justify-center shadow-lg">
-            <span className="text-primary-foreground font-bold text-3xl">B</span>
+            <Shield className="h-8 w-8 text-primary-foreground" />
           </div>
           <div className="text-center">
             <h1 className="text-2xl font-bold text-foreground">Bold Workplace</h1>
-            <p className="text-muted-foreground text-sm">Bem-vindo</p>
+            <p className="text-muted-foreground text-sm">Painel Administrativo</p>
           </div>
         </div>
 
         <Card className="border-0 shadow-lg">
           <CardHeader className="space-y-1">
-            <CardTitle className="text-xl">Entrar</CardTitle>
+            <CardTitle className="text-xl">Login Administrativo</CardTitle>
             <CardDescription>
-              Digite suas credenciais para acessar sua conta
+              Acesso restrito para administradores
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -89,7 +93,7 @@ export default function Login() {
                 <Input
                   id="email"
                   type="email"
-                  placeholder="seu@email.com"
+                  placeholder="admin@boldworkplace.com.br"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={isLoading}
@@ -133,21 +137,21 @@ export default function Login() {
                     Entrando...
                   </>
                 ) : (
-                  'Entrar'
+                  'Entrar como Administrador'
                 )}
               </Button>
             </form>
           </CardContent>
         </Card>
 
-        <div className="text-center">
-          <Link 
-            to="/forgot-password" 
-            className="text-sm text-muted-foreground hover:text-primary hover:underline"
-          >
-            Esqueceu sua senha?
-          </Link>
-        </div>
+        <Button
+          variant="ghost"
+          className="w-full"
+          onClick={() => navigate('/welcome')}
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Voltar
+        </Button>
       </div>
     </div>
   );

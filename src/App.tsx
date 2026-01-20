@@ -7,11 +7,14 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 
 // Public pages
+import Welcome from "./pages/Welcome";
 import Login from "./pages/Login";
-import Register from "./pages/Register";
+import AdminLogin from "./pages/AdminLogin";
+import ForgotPassword from "./pages/ForgotPassword";
 
 // User pages
 import Home from "./pages/Home";
+import Profile from "./pages/Profile";
 import Tickets from "./pages/Tickets";
 import NewTicket from "./pages/NewTicket";
 import Announcements from "./pages/Announcements";
@@ -25,6 +28,7 @@ import AdminTickets from "./pages/admin/Tickets";
 import AdminAnnouncements from "./pages/admin/Announcements";
 import AdminTemplates from "./pages/admin/Templates";
 import AdminMenu from "./pages/admin/Menu";
+import AdminUsers from "./pages/admin/Users";
 
 import NotFound from "./pages/NotFound";
 
@@ -39,11 +43,14 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             {/* Public routes */}
+            <Route path="/welcome" element={<Welcome />} />
             <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
+            <Route path="/admin-login" element={<AdminLogin />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
 
             {/* Protected user routes */}
             <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
+            <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             <Route path="/tickets" element={<ProtectedRoute><Tickets /></ProtectedRoute>} />
             <Route path="/tickets/new" element={<ProtectedRoute><NewTicket /></ProtectedRoute>} />
             <Route path="/announcements" element={<ProtectedRoute><Announcements /></ProtectedRoute>} />
@@ -57,6 +64,7 @@ const App = () => (
             <Route path="/admin/announcements" element={<ProtectedRoute requireAdmin><AdminAnnouncements /></ProtectedRoute>} />
             <Route path="/admin/templates" element={<ProtectedRoute requireAdmin><AdminTemplates /></ProtectedRoute>} />
             <Route path="/admin/menu" element={<ProtectedRoute requireAdmin><AdminMenu /></ProtectedRoute>} />
+            <Route path="/admin/users" element={<ProtectedRoute requireAdmin><AdminUsers /></ProtectedRoute>} />
 
             {/* Catch all */}
             <Route path="*" element={<NotFound />} />
