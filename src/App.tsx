@@ -21,6 +21,7 @@ import Announcements from "./pages/Announcements";
 import Menu from "./pages/Menu";
 import Floors from "./pages/Floors";
 import Manual from "./pages/Manual";
+import MeetingRooms from "./pages/MeetingRooms";
 
 // Admin pages
 import AdminDashboard from "./pages/admin/Dashboard";
@@ -57,6 +58,7 @@ const App = () => (
             <Route path="/menu" element={<ProtectedRoute><Menu /></ProtectedRoute>} />
             <Route path="/floors" element={<ProtectedRoute><Floors /></ProtectedRoute>} />
             <Route path="/manual" element={<ProtectedRoute><Manual /></ProtectedRoute>} />
+            <Route path="/meeting-rooms" element={<ProtectedRoute><MeetingRooms /></ProtectedRoute>} />
 
             {/* Protected admin routes */}
             <Route path="/admin" element={<ProtectedRoute requireAdmin><AdminDashboard /></ProtectedRoute>} />

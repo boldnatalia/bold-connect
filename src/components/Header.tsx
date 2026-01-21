@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, LogOut, User, Settings } from 'lucide-react';
+import { ArrowLeft, LogOut, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -89,10 +89,6 @@ export function Header({ title, showBack, rightAction }: HeaderProps) {
                   <DropdownMenuItem onClick={() => navigate('/profile')}>
                     <User className="mr-2 h-4 w-4" />
                     Meu Perfil
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate('/settings')}>
-                    <Settings className="mr-2 h-4 w-4" />
-                    Configurações
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                 </>

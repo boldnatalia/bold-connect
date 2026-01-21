@@ -80,6 +80,39 @@ export type Database = {
         }
         Relationships: []
       }
+      meeting_rooms: {
+        Row: {
+          capacity: number | null
+          created_at: string | null
+          description: string | null
+          floor: string
+          id: string
+          is_available: boolean | null
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          capacity?: number | null
+          created_at?: string | null
+          description?: string | null
+          floor: string
+          id?: string
+          is_available?: boolean | null
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          capacity?: number | null
+          created_at?: string | null
+          description?: string | null
+          floor?: string
+          id?: string
+          is_available?: boolean | null
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       menu_items: {
         Row: {
           category: string | null

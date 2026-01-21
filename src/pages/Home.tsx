@@ -10,7 +10,7 @@ import {
   MessageSquare, 
   Bell, 
   Building2, 
-  UtensilsCrossed, 
+  DoorOpen, 
   BookOpen,
   Plus,
   Clock,
@@ -33,7 +33,7 @@ export default function Home() {
     { icon: MessageSquare, label: 'Abrir Chamado', href: '/tickets/new', color: 'bg-info/10 text-info' },
     { icon: Bell, label: 'Ver Avisos', href: '/announcements', color: 'bg-warning/10 text-warning' },
     { icon: Building2, label: 'Andares', href: '/floors', color: 'bg-primary/10 text-primary' },
-    { icon: UtensilsCrossed, label: 'Cardápio', href: '/menu', color: 'bg-success/10 text-success' },
+    { icon: DoorOpen, label: 'Salas de Reunião', href: '/meeting-rooms', color: 'bg-success/10 text-success' },
   ];
 
   return (
