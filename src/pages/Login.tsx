@@ -140,12 +140,18 @@ export default function Login() {
           </CardContent>
         </Card>
 
-        <div className="text-center">
+        <div className="text-center space-y-2">
           <Link 
             to="/forgot-password" 
-            className="text-sm text-muted-foreground hover:text-primary hover:underline"
+            className="text-sm text-muted-foreground hover:text-primary hover:underline block"
           >
             Esqueceu sua senha?
+          </Link>
+          <Link 
+            to="/welcome" 
+            className="text-sm text-muted-foreground hover:text-primary hover:underline block"
+          >
+            ← Voltar ao início
           </Link>
         </div>
       </div>
