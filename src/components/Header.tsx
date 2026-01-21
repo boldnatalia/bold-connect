@@ -63,44 +63,50 @@ export function Header({ title, showBack, rightAction }: HeaderProps) {
 
         <div className="flex items-center gap-2 shrink-0">
           {rightAction}
-          {profile && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="rounded-full">
-                  <Avatar className="h-8 w-8">
-                    <AvatarFallback className="bg-primary/10 text-primary text-xs font-medium">
-                      {getInitials(profile.full_name)}
-                    </AvatarFallback>
-                  </Avatar>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="rounded-full">
+                <Avatar className="h-8 w-8">
+                  <AvatarFallback className="bg-primary/10 text-primary text-xs font-medium">
+                    {profile ? getInitials(profile.full_name) : <User className="h-4 w-4" />}
+                  </AvatarFallback>
+                </Avatar>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              {profile ? (
+                <>
+                  <div className="px-2 py-1.5">
+                    <p className="text-sm font-medium">{profile.full_name}</p>
+                    <p className="text-xs text-muted-foreground">{profile.company}</p>
+                    {isAdmin && (
+                      <span className="inline-block mt-1 text-[10px] font-medium px-1.5 py-0.5 rounded bg-primary/10 text-primary">
+                        Administrador
+                      </span>
+                    )}
+                  </div>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => navigate('/profile')}>
+                    <User className="mr-2 h-4 w-4" />
+                    Meu Perfil
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/settings')}>
+                    <Settings className="mr-2 h-4 w-4" />
+                    Configurações
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                </>
+              ) : (
                 <div className="px-2 py-1.5">
-                  <p className="text-sm font-medium">{profile.full_name}</p>
-                  <p className="text-xs text-muted-foreground">{profile.company}</p>
-                  {isAdmin && (
-                    <span className="inline-block mt-1 text-[10px] font-medium px-1.5 py-0.5 rounded bg-primary/10 text-primary">
-                      Administrador
-                    </span>
-                  )}
+                  <p className="text-sm text-muted-foreground">Carregando perfil...</p>
                 </div>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => navigate('/profile')}>
-                  <User className="mr-2 h-4 w-4" />
-                  Meu Perfil
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate('/settings')}>
-                  <Settings className="mr-2 h-4 w-4" />
-                  Configurações
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Sair
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
+              )}
+              <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
+                <LogOut className="mr-2 h-4 w-4" />
+                Sair
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </header>
