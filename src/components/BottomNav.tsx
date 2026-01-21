@@ -6,6 +6,7 @@ import {
   Bell, 
   BookOpen, 
   Building2, 
+  DoorOpen,
   UtensilsCrossed,
   Users,
   FileText,
@@ -25,8 +26,7 @@ const userNavItems: NavItem[] = [
   { icon: Home, label: 'Início', href: '/' },
   { icon: MessageSquare, label: 'Chamados', href: '/tickets' },
   { icon: Bell, label: 'Avisos', href: '/announcements' },
-  { icon: Building2, label: 'Andares', href: '/floors' },
-  { icon: UtensilsCrossed, label: 'Cardápio', href: '/menu' },
+  { icon: DoorOpen, label: 'Salas', href: '/meeting-rooms' },
   { icon: BookOpen, label: 'Manual', href: '/manual' },
 ];
 

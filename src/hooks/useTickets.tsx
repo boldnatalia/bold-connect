@@ -12,7 +12,7 @@ export function useTickets() {
     queryFn: async () => {
       let query = supabase
         .from('tickets')
-        .select('*, profile:profiles(full_name, company, room, floor:floors(name))')
+        .select('*')
         .order('created_at', { ascending: false });
 
       if (!isAdmin && user) {
@@ -21,7 +21,24 @@ export function useTickets() {
 
       const { data, error } = await query;
       if (error) throw error;
-      return data as unknown as Ticket[];
+      
+      // Fetch profile data separately for each ticket
+      const ticketsWithProfiles = await Promise.all(
+        (data || []).map(async (ticket) => {
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('full_name, company, room, floor:floors(name)')
+            .eq('user_id', ticket.user_id)
+            .single();
+          
+          return {
+            ...ticket,
+            profile: profileData
+          };
+        })
+      );
+      
+      return ticketsWithProfiles as unknown as Ticket[];
     },
     enabled: !!user,
   });

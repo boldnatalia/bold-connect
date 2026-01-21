@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { AdminLayout } from '@/components/AdminLayout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -31,13 +31,23 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useFloors } from '@/hooks/useFloors';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Loader2, Search, UserPlus, MoreVertical, UserX, UserCheck, Trash2, Edit } from 'lucide-react';
+import { Plus, Loader2, Search, UserPlus, MoreVertical, UserX, UserCheck, Trash2, Edit, Filter, X } from 'lucide-react';
 import type { Profile } from '@/types';
 import { z } from 'zod';
+
+const ITEMS_PER_PAGE = 20;
 
 const userSchema = z.object({
   email: z.string().email('Email inválido'),
@@ -57,6 +67,8 @@ const editUserSchema = z.object({
   room: z.string().min(1, 'Informe a sala'),
 });
 
+type StatusFilter = 'all' | 'active' | 'inactive';
+
 export default function AdminUsers() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -66,6 +78,9 @@ export default function AdminUsers() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<Profile | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [companyFilter, setCompanyFilter] = useState<string>('all');
+  const [currentPage, setCurrentPage] = useState(1);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -94,12 +109,50 @@ export default function AdminUsers() {
       const { data, error } = await supabase
         .from('profiles')
         .select('*, floor:floors(*)')
-        .order('created_at', { ascending: false });
+        .order('company', { ascending: true })
+        .order('full_name', { ascending: true });
 
       if (error) throw error;
       return data as unknown as Profile[];
     },
   });
+
+  // Get unique companies for filter
+  const companies = useMemo(() => {
+    const uniqueCompanies = [...new Set(profiles.map(p => p.company))];
+    return uniqueCompanies.sort();
+  }, [profiles]);
+
+  // Filtered and paginated profiles
+  const filteredProfiles = useMemo(() => {
+    return profiles.filter((p) => {
+      const matchesSearch = 
+        p.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        p.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        p.cpf.includes(searchTerm);
+      
+      const matchesStatus = 
+        statusFilter === 'all' ||
+        (statusFilter === 'active' && p.is_active) ||
+        (statusFilter === 'inactive' && !p.is_active);
+      
+      const matchesCompany = 
+        companyFilter === 'all' || p.company === companyFilter;
+
+      return matchesSearch && matchesStatus && matchesCompany;
+    });
+  }, [profiles, searchTerm, statusFilter, companyFilter]);
+
+  const totalPages = Math.ceil(filteredProfiles.length / ITEMS_PER_PAGE);
+  const paginatedProfiles = filteredProfiles.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
+  // Reset to page 1 when filters change
+  const handleFilterChange = () => {
+    setCurrentPage(1);
+  };
 
   // Create user mutation
   const createUser = useMutation({
@@ -321,12 +374,14 @@ export default function AdminUsers() {
     return cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
   };
 
-  const filteredProfiles = profiles.filter(
-    (p) =>
-      p.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      p.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      p.cpf.includes(searchTerm)
-  );
+  const clearFilters = () => {
+    setSearchTerm('');
+    setStatusFilter('all');
+    setCompanyFilter('all');
+    setCurrentPage(1);
+  };
+
+  const hasActiveFilters = searchTerm || statusFilter !== 'all' || companyFilter !== 'all';
 
   const availableFloors = floors.filter((f) => f.is_available);
 
@@ -340,9 +395,59 @@ export default function AdminUsers() {
             <Input
               placeholder="Buscar por nome, empresa ou CPF..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                handleFilterChange();
+              }}
               className="pl-9"
             />
+          </div>
+
+          {/* Filters Row */}
+          <div className="flex flex-wrap gap-2">
+            <Select 
+              value={statusFilter} 
+              onValueChange={(value: StatusFilter) => {
+                setStatusFilter(value);
+                handleFilterChange();
+              }}
+            >
+              <SelectTrigger className="w-[130px]">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos</SelectItem>
+                <SelectItem value="active">Ativos</SelectItem>
+                <SelectItem value="inactive">Inativos</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select 
+              value={companyFilter} 
+              onValueChange={(value) => {
+                setCompanyFilter(value);
+                handleFilterChange();
+              }}
+            >
+              <SelectTrigger className="w-[150px]">
+                <SelectValue placeholder="Empresa" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas empresas</SelectItem>
+                {companies.map((company) => (
+                  <SelectItem key={company} value={company}>
+                    {company}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {hasActiveFilters && (
+              <Button variant="ghost" size="sm" onClick={clearFilters}>
+                <X className="h-4 w-4 mr-1" />
+                Limpar
+              </Button>
+            )}
           </div>
 
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
@@ -477,25 +582,36 @@ export default function AdminUsers() {
           </Dialog>
         </div>
 
-        {/* Users Count */}
-        <p className="text-sm text-muted-foreground">
-          {filteredProfiles.length} usuário(s) encontrado(s)
-        </p>
+        {/* Users Count & Stats */}
+        <div className="flex flex-wrap gap-2 items-center text-sm text-muted-foreground">
+          <span>{filteredProfiles.length} usuário(s)</span>
+          {filteredProfiles.length !== profiles.length && (
+            <span className="text-xs">de {profiles.length} total</span>
+          )}
+          <div className="flex gap-2 ml-auto">
+            <Badge variant="outline" className="text-xs">
+              {profiles.filter(p => p.is_active).length} ativos
+            </Badge>
+            <Badge variant="secondary" className="text-xs">
+              {profiles.filter(p => !p.is_active).length} inativos
+            </Badge>
+          </div>
+        </div>
 
         {/* Users List - Mobile Cards */}
         {isLoading ? (
           <div className="flex items-center justify-center py-8">
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
           </div>
-        ) : filteredProfiles.length === 0 ? (
+        ) : paginatedProfiles.length === 0 ? (
           <Card>
             <CardContent className="py-8 text-center text-muted-foreground">
-              {searchTerm ? 'Nenhum usuário encontrado.' : 'Nenhum usuário cadastrado.'}
+              {hasActiveFilters ? 'Nenhum usuário encontrado com os filtros aplicados.' : 'Nenhum usuário cadastrado.'}
             </CardContent>
           </Card>
         ) : (
           <div className="space-y-3">
-            {filteredProfiles.map((profile) => (
+            {paginatedProfiles.map((profile) => (
               <Card key={profile.id} className={!profile.is_active ? 'opacity-60' : ''}>
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between gap-3">
@@ -515,9 +631,6 @@ export default function AdminUsers() {
                           {profile.floor?.name || 'N/A'} • Sala {profile.room}
                         </Badge>
                       </div>
-                      <p className="text-xs text-muted-foreground">
-                        Cadastrado em {new Date(profile.created_at).toLocaleDateString('pt-BR')}
-                      </p>
                     </div>
                     
                     <DropdownMenu>
@@ -531,7 +644,10 @@ export default function AdminUsers() {
                           <Edit className="mr-2 h-4 w-4" />
                           Editar
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleToggleStatus(profile)}>
+                        <DropdownMenuItem 
+                          onClick={() => handleToggleStatus(profile)}
+                          disabled={toggleUserStatus.isPending}
+                        >
                           {profile.is_active ? (
                             <>
                               <UserX className="mr-2 h-4 w-4" />
@@ -558,6 +674,52 @@ export default function AdminUsers() {
               </Card>
             ))}
           </div>
+        )}
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <Pagination className="mt-4">
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious 
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                />
+              </PaginationItem>
+              
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                let pageNum: number;
+                if (totalPages <= 5) {
+                  pageNum = i + 1;
+                } else if (currentPage <= 3) {
+                  pageNum = i + 1;
+                } else if (currentPage >= totalPages - 2) {
+                  pageNum = totalPages - 4 + i;
+                } else {
+                  pageNum = currentPage - 2 + i;
+                }
+                
+                return (
+                  <PaginationItem key={pageNum}>
+                    <PaginationLink
+                      onClick={() => setCurrentPage(pageNum)}
+                      isActive={currentPage === pageNum}
+                      className="cursor-pointer"
+                    >
+                      {pageNum}
+                    </PaginationLink>
+                  </PaginationItem>
+                );
+              })}
+              
+              <PaginationItem>
+                <PaginationNext 
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
         )}
 
         {/* Edit Dialog */}
