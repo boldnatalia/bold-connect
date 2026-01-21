@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { AdminLayout } from '@/components/AdminLayout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -15,19 +15,27 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useFloors } from '@/hooks/useFloors';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Loader2, Search, UserPlus, Edit, UserX, UserCheck } from 'lucide-react';
+import { Plus, Loader2, Search, UserPlus, MoreVertical, UserX, UserCheck, Trash2, Edit } from 'lucide-react';
 import type { Profile } from '@/types';
 import { z } from 'zod';
 
@@ -41,11 +49,22 @@ const userSchema = z.object({
   room: z.string().min(1, 'Informe a sala'),
 });
 
+const editUserSchema = z.object({
+  full_name: z.string().min(3, 'Nome deve ter pelo menos 3 caracteres'),
+  cpf: z.string().regex(/^\d{11}$/, 'CPF deve ter 11 dígitos'),
+  company: z.string().min(2, 'Empresa deve ter pelo menos 2 caracteres'),
+  floor_id: z.string().uuid('Selecione um andar'),
+  room: z.string().min(1, 'Informe a sala'),
+});
+
 export default function AdminUsers() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { floors } = useFloors();
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<Profile | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -53,6 +72,14 @@ export default function AdminUsers() {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
+    full_name: '',
+    cpf: '',
+    company: '',
+    floor_id: '',
+    room: '',
+  });
+
+  const [editFormData, setEditFormData] = useState({
     full_name: '',
     cpf: '',
     company: '',
@@ -77,7 +104,6 @@ export default function AdminUsers() {
   // Create user mutation
   const createUser = useMutation({
     mutationFn: async (data: typeof formData) => {
-      // First, create the auth user using edge function (since we can't use admin API client-side)
       const { data: authData, error: authError } = await supabase.functions.invoke('create-user', {
         body: { email: data.email, password: data.password },
       });
@@ -85,7 +111,6 @@ export default function AdminUsers() {
       if (authError) throw authError;
       if (!authData?.user?.id) throw new Error('Erro ao criar usuário');
 
-      // Create the profile
       const { error: profileError } = await supabase.from('profiles').insert({
         user_id: authData.user.id,
         full_name: data.full_name,
@@ -105,13 +130,105 @@ export default function AdminUsers() {
         title: 'Usuário criado',
         description: 'O usuário foi criado com sucesso.',
       });
-      setIsDialogOpen(false);
+      setIsCreateDialogOpen(false);
       resetForm();
     },
     onError: (error: Error) => {
       toast({
         title: 'Erro',
         description: error.message || 'Erro ao criar usuário.',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  // Update user mutation
+  const updateUser = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: typeof editFormData }) => {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          full_name: data.full_name,
+          cpf: data.cpf,
+          company: data.company,
+          floor_id: data.floor_id,
+          room: data.room,
+        })
+        .eq('id', id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-profiles'] });
+      toast({
+        title: 'Usuário atualizado',
+        description: 'Os dados do usuário foram atualizados.',
+      });
+      setIsEditDialogOpen(false);
+      setSelectedUser(null);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Erro',
+        description: error.message || 'Erro ao atualizar usuário.',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  // Toggle user active status mutation
+  const toggleUserStatus = useMutation({
+    mutationFn: async ({ id, is_active }: { id: string; is_active: boolean }) => {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ is_active })
+        .eq('id', id);
+
+      if (error) throw error;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['admin-profiles'] });
+      toast({
+        title: variables.is_active ? 'Usuário ativado' : 'Usuário desativado',
+        description: variables.is_active
+          ? 'O usuário foi ativado com sucesso.'
+          : 'O usuário foi desativado com sucesso.',
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Erro',
+        description: error.message || 'Erro ao alterar status do usuário.',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  // Delete user mutation
+  const deleteUser = useMutation({
+    mutationFn: async (userId: string) => {
+      const { data, error } = await supabase.functions.invoke('manage-user', {
+        body: { action: 'delete', user_id: userId },
+      });
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-profiles'] });
+      toast({
+        title: 'Usuário excluído',
+        description: 'O usuário foi excluído permanentemente.',
+      });
+      setIsDeleteDialogOpen(false);
+      setSelectedUser(null);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Erro',
+        description: error.message || 'Erro ao excluir usuário.',
         variant: 'destructive',
       });
     },
@@ -130,7 +247,7 @@ export default function AdminUsers() {
     setError('');
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleCreateSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
@@ -145,6 +262,54 @@ export default function AdminUsers() {
       await createUser.mutateAsync(formData);
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+
+    const validation = editUserSchema.safeParse(editFormData);
+    if (!validation.success) {
+      setError(validation.error.errors[0].message);
+      return;
+    }
+
+    if (!selectedUser) return;
+
+    setIsSubmitting(true);
+    try {
+      await updateUser.mutateAsync({ id: selectedUser.id, data: editFormData });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const openEditDialog = (profile: Profile) => {
+    setSelectedUser(profile);
+    setEditFormData({
+      full_name: profile.full_name,
+      cpf: profile.cpf,
+      company: profile.company,
+      floor_id: profile.floor_id || '',
+      room: profile.room,
+    });
+    setError('');
+    setIsEditDialogOpen(true);
+  };
+
+  const openDeleteDialog = (profile: Profile) => {
+    setSelectedUser(profile);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleToggleStatus = (profile: Profile) => {
+    toggleUserStatus.mutate({ id: profile.id, is_active: !profile.is_active });
+  };
+
+  const handleDelete = () => {
+    if (selectedUser) {
+      deleteUser.mutate(selectedUser.user_id);
     }
   };
 
@@ -180,9 +345,9 @@ export default function AdminUsers() {
             />
           </div>
 
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="w-full" onClick={() => { resetForm(); setIsDialogOpen(true); }}>
+              <Button className="w-full" onClick={() => { resetForm(); setIsCreateDialogOpen(true); }}>
                 <UserPlus className="mr-2 h-4 w-4" />
                 Novo Usuário
               </Button>
@@ -194,7 +359,7 @@ export default function AdminUsers() {
                   Preencha os dados do novo usuário.
                 </DialogDescription>
               </DialogHeader>
-              <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+              <form onSubmit={handleCreateSubmit} className="space-y-4 mt-4">
                 {error && (
                   <Alert variant="destructive">
                     <AlertDescription>{error}</AlertDescription>
@@ -292,7 +457,7 @@ export default function AdminUsers() {
                     type="button"
                     variant="outline"
                     className="flex-1"
-                    onClick={() => setIsDialogOpen(false)}
+                    onClick={() => setIsCreateDialogOpen(false)}
                   >
                     Cancelar
                   </Button>
@@ -331,14 +496,17 @@ export default function AdminUsers() {
         ) : (
           <div className="space-y-3">
             {filteredProfiles.map((profile) => (
-              <Card key={profile.id}>
+              <Card key={profile.id} className={!profile.is_active ? 'opacity-60' : ''}>
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1 min-w-0 space-y-2">
-                      <div>
+                      <div className="flex items-center gap-2">
                         <p className="font-medium truncate">{profile.full_name}</p>
-                        <p className="text-sm text-muted-foreground">{profile.company}</p>
+                        {!profile.is_active && (
+                          <Badge variant="secondary" className="text-xs">Inativo</Badge>
+                        )}
                       </div>
+                      <p className="text-sm text-muted-foreground">{profile.company}</p>
                       <div className="flex flex-wrap gap-2 text-xs">
                         <Badge variant="outline" className="font-mono">
                           {displayCPF(profile.cpf)}
@@ -351,12 +519,180 @@ export default function AdminUsers() {
                         Cadastrado em {new Date(profile.created_at).toLocaleDateString('pt-BR')}
                       </p>
                     </div>
+                    
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => openEditDialog(profile)}>
+                          <Edit className="mr-2 h-4 w-4" />
+                          Editar
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleToggleStatus(profile)}>
+                          {profile.is_active ? (
+                            <>
+                              <UserX className="mr-2 h-4 w-4" />
+                              Desativar
+                            </>
+                          ) : (
+                            <>
+                              <UserCheck className="mr-2 h-4 w-4" />
+                              Ativar
+                            </>
+                          )}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          onClick={() => openDeleteDialog(profile)}
+                          className="text-destructive focus:text-destructive"
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Excluir
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 </CardContent>
               </Card>
             ))}
           </div>
         )}
+
+        {/* Edit Dialog */}
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent className="max-w-[95vw] sm:max-w-md max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Editar Usuário</DialogTitle>
+              <DialogDescription>
+                Atualize os dados do usuário.
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleEditSubmit} className="space-y-4 mt-4">
+              {error && (
+                <Alert variant="destructive">
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+
+              <div className="space-y-2">
+                <Label htmlFor="edit_full_name">Nome Completo *</Label>
+                <Input
+                  id="edit_full_name"
+                  placeholder="João da Silva"
+                  value={editFormData.full_name}
+                  onChange={(e) => setEditFormData({ ...editFormData, full_name: e.target.value })}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edit_cpf">CPF *</Label>
+                <Input
+                  id="edit_cpf"
+                  placeholder="00000000000"
+                  value={editFormData.cpf}
+                  onChange={(e) => setEditFormData({ ...editFormData, cpf: formatCPF(e.target.value) })}
+                  maxLength={11}
+                />
+                <p className="text-xs text-muted-foreground">Apenas números</p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edit_company">Empresa *</Label>
+                <Input
+                  id="edit_company"
+                  placeholder="Nome da empresa"
+                  value={editFormData.company}
+                  onChange={(e) => setEditFormData({ ...editFormData, company: e.target.value })}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label>Andar *</Label>
+                  <Select
+                    value={editFormData.floor_id}
+                    onValueChange={(value) => setEditFormData({ ...editFormData, floor_id: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableFloors.map((floor) => (
+                        <SelectItem key={floor.id} value={floor.id}>
+                          {floor.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="edit_room">Sala *</Label>
+                  <Input
+                    id="edit_room"
+                    placeholder="301"
+                    value={editFormData.room}
+                    onChange={(e) => setEditFormData({ ...editFormData, room: e.target.value })}
+                    maxLength={10}
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => setIsEditDialogOpen(false)}
+                >
+                  Cancelar
+                </Button>
+                <Button type="submit" className="flex-1" disabled={isSubmitting}>
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Salvando...
+                    </>
+                  ) : (
+                    'Salvar'
+                  )}
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
+
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+          <AlertDialogContent className="max-w-[95vw] sm:max-w-md">
+            <AlertDialogHeader>
+              <AlertDialogTitle>Excluir usuário?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Esta ação não pode ser desfeita. O usuário <strong>{selectedUser?.full_name}</strong> será 
+                removido permanentemente do sistema, incluindo todos os seus dados e chamados.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter className="flex-col gap-2 sm:flex-row">
+              <AlertDialogCancel className="w-full sm:w-auto">Cancelar</AlertDialogCancel>
+              <AlertDialogAction 
+                onClick={handleDelete}
+                className="w-full sm:w-auto bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                disabled={deleteUser.isPending}
+              >
+                {deleteUser.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Excluindo...
+                  </>
+                ) : (
+                  'Excluir'
+                )}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </AdminLayout>
   );
