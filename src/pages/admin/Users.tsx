@@ -167,10 +167,10 @@ export default function AdminUsers() {
 
   return (
     <AdminLayout title="Gestão de Usuários">
-      <div className="p-6 space-y-6">
+      <div className="p-4 space-y-4">
         {/* Header Actions */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-between">
-          <div className="relative flex-1 max-w-sm">
+        <div className="flex flex-col gap-3">
+          <div className="relative w-full">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Buscar por nome, empresa ou CPF..."
@@ -182,16 +182,16 @@ export default function AdminUsers() {
 
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
-              <Button onClick={() => { resetForm(); setIsDialogOpen(true); }}>
+              <Button className="w-full" onClick={() => { resetForm(); setIsDialogOpen(true); }}>
                 <UserPlus className="mr-2 h-4 w-4" />
                 Novo Usuário
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-w-[95vw] sm:max-w-md max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Criar Novo Usuário</DialogTitle>
                 <DialogDescription>
-                  Preencha os dados do novo usuário. Ele poderá acessar o app com essas credenciais.
+                  Preencha os dados do novo usuário.
                 </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4 mt-4">
@@ -312,56 +312,51 @@ export default function AdminUsers() {
           </Dialog>
         </div>
 
-        {/* Users Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">
-              Usuários ({filteredProfiles.length})
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-              </div>
-            ) : filteredProfiles.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                {searchTerm ? 'Nenhum usuário encontrado.' : 'Nenhum usuário cadastrado.'}
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Nome</TableHead>
-                      <TableHead>Empresa</TableHead>
-                      <TableHead>CPF</TableHead>
-                      <TableHead>Localização</TableHead>
-                      <TableHead>Cadastro</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredProfiles.map((profile) => (
-                      <TableRow key={profile.id}>
-                        <TableCell className="font-medium">{profile.full_name}</TableCell>
-                        <TableCell>{profile.company}</TableCell>
-                        <TableCell className="font-mono text-sm">
+        {/* Users Count */}
+        <p className="text-sm text-muted-foreground">
+          {filteredProfiles.length} usuário(s) encontrado(s)
+        </p>
+
+        {/* Users List - Mobile Cards */}
+        {isLoading ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          </div>
+        ) : filteredProfiles.length === 0 ? (
+          <Card>
+            <CardContent className="py-8 text-center text-muted-foreground">
+              {searchTerm ? 'Nenhum usuário encontrado.' : 'Nenhum usuário cadastrado.'}
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="space-y-3">
+            {filteredProfiles.map((profile) => (
+              <Card key={profile.id}>
+                <CardContent className="p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0 space-y-2">
+                      <div>
+                        <p className="font-medium truncate">{profile.full_name}</p>
+                        <p className="text-sm text-muted-foreground">{profile.company}</p>
+                      </div>
+                      <div className="flex flex-wrap gap-2 text-xs">
+                        <Badge variant="outline" className="font-mono">
                           {displayCPF(profile.cpf)}
-                        </TableCell>
-                        <TableCell>
+                        </Badge>
+                        <Badge variant="secondary">
                           {profile.floor?.name || 'N/A'} • Sala {profile.room}
-                        </TableCell>
-                        <TableCell className="text-muted-foreground text-sm">
-                          {new Date(profile.created_at).toLocaleDateString('pt-BR')}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                        </Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Cadastrado em {new Date(profile.created_at).toLocaleDateString('pt-BR')}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
       </div>
     </AdminLayout>
   );
