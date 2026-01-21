@@ -155,6 +155,7 @@ export type Database = {
           floor_id: string | null
           full_name: string
           id: string
+          is_active: boolean
           room: string
           updated_at: string | null
           user_id: string
@@ -167,6 +168,7 @@ export type Database = {
           floor_id?: string | null
           full_name: string
           id?: string
+          is_active?: boolean
           room: string
           updated_at?: string | null
           user_id: string
@@ -179,6 +181,7 @@ export type Database = {
           floor_id?: string | null
           full_name?: string
           id?: string
+          is_active?: boolean
           room?: string
           updated_at?: string | null
           user_id?: string
