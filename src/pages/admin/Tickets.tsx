@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { AdminLayout } from '@/components/AdminLayout';
 import { useTickets } from '@/hooks/useTickets';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useTicketComments } from '@/hooks/useTicketComments';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Select,
@@ -15,23 +15,104 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { Clock, Search, Loader2, User, Building, MapPin } from 'lucide-react';
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet';
+import { Clock, Search, Loader2, User, Building, MapPin, Send, MessageCircle } from 'lucide-react';
 import { formatDistanceToNow, format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { TICKET_STATUS_LABELS, TicketStatus, Ticket } from '@/types';
 import { cn } from '@/lib/utils';
+
+function TicketCommentsSection({ ticketId }: { ticketId: string }) {
+  const { comments, isLoading, addComment, isAdding } = useTicketComments(ticketId);
+  const [newComment, setNewComment] = useState('');
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newComment.trim() || newComment.length > 50) return;
+    
+    addComment(newComment.trim(), {
+      onSuccess: () => setNewComment(''),
+    });
+  };
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center gap-2 text-sm font-medium">
+        <MessageCircle className="h-4 w-4" />
+        <span>Atualizações</span>
+      </div>
+
+      {/* Comments list */}
+      <div className="max-h-48 overflow-y-auto space-y-2">
+        {isLoading ? (
+          <div className="flex justify-center py-2">
+            <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+          </div>
+        ) : comments.length === 0 ? (
+          <p className="text-xs text-muted-foreground text-center py-2">
+            Nenhuma atualização
+          </p>
+        ) : (
+          comments.map((comment) => (
+            <div
+              key={comment.id}
+              className={cn(
+                'p-2 rounded-lg text-sm',
+                comment.is_admin
+                  ? 'bg-primary/10 border border-primary/20'
+                  : 'bg-muted'
+              )}
+            >
+              <p>{comment.content}</p>
+              <p className="text-[10px] text-muted-foreground mt-1">
+                {comment.is_admin ? 'Admin • ' : 'Cliente • '}
+                {format(new Date(comment.created_at), "dd/MM 'às' HH:mm", { locale: ptBR })}
+              </p>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Add comment form */}
+      <form onSubmit={handleSubmit} className="flex gap-2">
+        <div className="flex-1 relative">
+          <Input
+            placeholder="Adicionar atualização..."
+            value={newComment}
+            onChange={(e) => setNewComment(e.target.value.slice(0, 50))}
+            maxLength={50}
+            className="pr-12 h-10"
+          />
+          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground">
+            {newComment.length}/50
+          </span>
+        </div>
+        <Button 
+          type="submit" 
+          size="icon"
+          disabled={!newComment.trim() || isAdding}
+          className="shrink-0 h-10 w-10"
+        >
+          {isAdding ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Send className="h-4 w-4" />
+          )}
+        </Button>
+      </form>
+    </div>
+  );
+}
 
 export default function AdminTickets() {
   const { tickets, isLoading, updateTicket, isUpdating } = useTickets();
   const [filter, setFilter] = useState<TicketStatus | 'all'>('all');
   const [search, setSearch] = useState('');
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
-  const [adminNotes, setAdminNotes] = useState('');
 
   const filteredTickets = tickets
     .filter(t => filter === 'all' || t.status === filter)
@@ -52,12 +133,11 @@ export default function AdminTickets() {
   };
 
   const handleStatusChange = (ticketId: string, newStatus: TicketStatus) => {
-    updateTicket({ id: ticketId, status: newStatus, admin_notes: adminNotes || undefined });
+    updateTicket({ id: ticketId, status: newStatus });
   };
 
   const openTicketDetails = (ticket: Ticket) => {
     setSelectedTicket(ticket);
-    setAdminNotes(ticket.admin_notes || '');
   };
 
   return (
@@ -109,7 +189,7 @@ export default function AdminTickets() {
             {filteredTickets.map((ticket) => (
               <Card 
                 key={ticket.id} 
-                className="cursor-pointer hover:shadow-md transition-shadow"
+                className="active:scale-[0.99] transition-transform"
                 onClick={() => openTicketDetails(ticket)}
               >
                 <CardContent className="p-4">
@@ -139,7 +219,25 @@ export default function AdminTickets() {
                       </p>
                     </div>
 
-                    {/* Status selector */}
+                    {/* User info */}
+                    {ticket.profile && (
+                      <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                        <span className="flex items-center gap-1">
+                          <User className="h-3 w-3" />
+                          {ticket.profile.full_name}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Building className="h-3 w-3" />
+                          {ticket.profile.company}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <MapPin className="h-3 w-3" />
+                          {ticket.profile.room}
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Quick status change */}
                     <Select
                       value={ticket.status}
                       onValueChange={(value) => {
@@ -147,7 +245,7 @@ export default function AdminTickets() {
                       }}
                     >
                       <SelectTrigger 
-                        className="w-full"
+                        className="w-full h-10"
                         onClick={(e) => e.stopPropagation()}
                       >
                         <SelectValue />
@@ -171,14 +269,14 @@ export default function AdminTickets() {
           </Card>
         )}
 
-        {/* Ticket Details Dialog */}
-        <Dialog open={!!selectedTicket} onOpenChange={() => setSelectedTicket(null)}>
-          <DialogContent className="max-w-[95vw] sm:max-w-lg max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="text-left pr-6">{selectedTicket?.title}</DialogTitle>
-            </DialogHeader>
+        {/* Ticket Details Sheet (mobile-friendly) */}
+        <Sheet open={!!selectedTicket} onOpenChange={() => setSelectedTicket(null)}>
+          <SheetContent side="bottom" className="h-[85vh] rounded-t-2xl">
+            <SheetHeader className="text-left pb-4">
+              <SheetTitle className="pr-6">{selectedTicket?.title}</SheetTitle>
+            </SheetHeader>
             {selectedTicket && (
-              <div className="space-y-4">
+              <div className="space-y-4 overflow-y-auto h-[calc(100%-4rem)] pb-8">
                 <div className="flex flex-wrap items-center gap-2">
                   <Badge className={cn('text-xs', getStatusClass(selectedTicket.status))}>
                     {TICKET_STATUS_LABELS[selectedTicket.status]}
@@ -187,6 +285,16 @@ export default function AdminTickets() {
                     Aberto em {format(new Date(selectedTicket.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
                   </span>
                 </div>
+
+                {/* User info */}
+                {selectedTicket.profile && (
+                  <div className="p-3 bg-muted/50 rounded-lg space-y-1">
+                    <p className="text-sm font-medium">{selectedTicket.profile.full_name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {selectedTicket.profile.company} • {selectedTicket.profile.room}
+                    </p>
+                  </div>
+                )}
 
                 <div className="p-3 bg-muted rounded-lg">
                   <p className="text-sm">{selectedTicket.description}</p>
@@ -201,7 +309,7 @@ export default function AdminTickets() {
                       setSelectedTicket({ ...selectedTicket, status: value as TicketStatus });
                     }}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="h-12">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -212,43 +320,20 @@ export default function AdminTickets() {
                   </Select>
                 </div>
 
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Notas do Administrador</label>
-                  <Textarea
-                    placeholder="Adicione observações sobre este chamado..."
-                    value={adminNotes}
-                    onChange={(e) => setAdminNotes(e.target.value)}
-                    rows={3}
-                  />
-                </div>
+                {/* Comments Section */}
+                <TicketCommentsSection ticketId={selectedTicket.id} />
 
-                <div className="flex flex-col sm:flex-row gap-2">
-                  <Button 
-                    variant="outline" 
-                    onClick={() => setSelectedTicket(null)}
-                    className="flex-1"
-                  >
-                    Fechar
-                  </Button>
-                  <Button 
-                    onClick={() => {
-                      updateTicket({ 
-                        id: selectedTicket.id, 
-                        admin_notes: adminNotes 
-                      });
-                      setSelectedTicket(null);
-                    }}
-                    disabled={isUpdating}
-                    className="flex-1"
-                  >
-                    {isUpdating && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                    Salvar
-                  </Button>
-                </div>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setSelectedTicket(null)}
+                  className="w-full h-12"
+                >
+                  Fechar
+                </Button>
               </div>
             )}
-          </DialogContent>
-        </Dialog>
+          </SheetContent>
+        </Sheet>
       </div>
     </AdminLayout>
   );
