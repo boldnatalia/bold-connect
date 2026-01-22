@@ -38,6 +38,15 @@ export interface UserRole {
   created_at: string;
 }
 
+export interface TicketComment {
+  id: string;
+  ticket_id: string;
+  user_id: string;
+  content: string;
+  is_admin: boolean;
+  created_at: string;
+}
+
 export interface Ticket {
   id: string;
   user_id: string;
@@ -48,6 +57,7 @@ export interface Ticket {
   created_at: string;
   updated_at: string;
   profile?: Profile;
+  comments?: TicketComment[];
 }
 
 export interface Announcement {
@@ -78,6 +88,17 @@ export interface MessageTemplate {
   content: string;
   category: string | null;
   created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface MeetingRoom {
+  id: string;
+  name: string;
+  floor: string;
+  capacity: number | null;
+  description: string | null;
+  is_available: boolean;
   created_at: string;
   updated_at: string;
 }
