@@ -63,7 +63,7 @@ export default function Tickets() {
           <div className="space-y-3">
             {filteredTickets.map((ticket) => (
               <Link key={ticket.id} to={`/tickets/${ticket.id}`}>
-                <Card className="card-premium hover:bg-muted/50 transition-colors">
+                <Card className="card-premium">
                   <CardContent className="p-4">
                     <div className="flex items-start gap-3">
                       <div className="flex-1 min-w-0">

@@ -22,24 +22,24 @@ export default function AdminDashboard() {
       title: 'Chamados Pendentes',
       value: pendingTickets,
       icon: AlertCircle,
-      color: 'text-yellow-500',
-      bgColor: 'bg-yellow-500/10',
+      color: 'text-warning',
+      bgColor: 'bg-warning/10',
       link: '/admin/tickets?status=pending'
     },
     {
       title: 'Em Andamento',
       value: inProgressTickets,
       icon: Clock,
-      color: 'text-blue-500',
-      bgColor: 'bg-blue-500/10',
+      color: 'text-info',
+      bgColor: 'bg-info/10',
       link: '/admin/tickets?status=in_progress'
     },
     {
       title: 'Resolvidos',
       value: resolvedTickets,
       icon: CheckCircle,
-      color: 'text-green-500',
-      bgColor: 'bg-green-500/10',
+      color: 'text-success',
+      bgColor: 'bg-success/10',
       link: '/admin/tickets?status=resolved'
     },
     {
@@ -54,16 +54,16 @@ export default function AdminDashboard() {
       title: 'Avisos Ativos',
       value: activeAnnouncements,
       icon: Bell,
-      color: 'text-purple-500',
-      bgColor: 'bg-purple-500/10',
+      color: 'text-accent',
+      bgColor: 'bg-accent/10',
       link: '/admin/announcements'
     },
     {
       title: 'Itens no Cardápio',
       value: availableMenuItems,
       icon: UtensilsCrossed,
-      color: 'text-orange-500',
-      bgColor: 'bg-orange-500/10',
+      color: 'text-destructive',
+      bgColor: 'bg-destructive/10',
       link: '/admin/menu'
     },
   ];
@@ -76,7 +76,7 @@ export default function AdminDashboard() {
             const Icon = stat.icon;
             return (
               <Link key={stat.title} to={stat.link}>
-                <Card className="hover:shadow-md transition-shadow cursor-pointer">
+                <Card className="card-premium cursor-pointer">
                   <CardHeader className="flex flex-row items-center justify-between pb-2">
                     <CardTitle className="text-sm font-medium text-muted-foreground">
                       {stat.title}
@@ -109,7 +109,7 @@ export default function AdminDashboard() {
                     <Link 
                       key={ticket.id} 
                       to={`/admin/tickets`}
-                      className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
+                      className="flex items-center justify-between p-3 rounded-lg bg-muted/50 transition-all duration-200 active:scale-[0.98] active:bg-muted"
                     >
                       <div>
                         <p className="font-medium text-sm">{ticket.title}</p>
@@ -117,7 +117,7 @@ export default function AdminDashboard() {
                           {ticket.description}
                         </p>
                       </div>
-                      <AlertCircle className="h-4 w-4 text-yellow-500" />
+                      <AlertCircle className="h-4 w-4 text-warning" />
                     </Link>
                   ))}
               </div>

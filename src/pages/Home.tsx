@@ -56,7 +56,7 @@ export default function Home() {
               <Link
                 key={action.href}
                 to={action.href}
-                className="flex flex-col items-center gap-2 p-3 rounded-xl bg-card border border-border hover:shadow-md transition-shadow"
+                className="flex flex-col items-center gap-2 p-3 rounded-xl bg-card border border-border transition-all duration-200 active:scale-95 active:bg-muted/50"
               >
                 <div className={`p-2.5 rounded-lg ${action.color}`}>
                   <Icon className="h-5 w-5" />
@@ -120,7 +120,7 @@ export default function Home() {
             <div className="space-y-2">
               {pendingTickets.slice(0, 3).map((ticket) => (
                 <Link key={ticket.id} to={`/tickets/${ticket.id}`}>
-                  <Card className="card-premium hover:bg-muted/50 transition-colors">
+                  <Card className="card-premium">
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between">
                         <div className="min-w-0 flex-1">
@@ -164,7 +164,7 @@ export default function Home() {
 
         {/* Manual Quick Access */}
         <Link to="/manual">
-          <Card className="card-premium hover:bg-muted/50 transition-colors">
+          <Card className="card-premium">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
                 <div className="p-3 rounded-lg bg-primary/10">

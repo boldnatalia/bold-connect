@@ -53,10 +53,10 @@ export function AdminLayout({ children, title }: AdminLayoutProps) {
               to={item.path}
               onClick={() => setOpen(false)}
               className={cn(
-                'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
+                'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 active:scale-95',
                 isActive 
                   ? 'bg-primary text-primary-foreground' 
-                  : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                  : 'text-muted-foreground active:bg-muted'
               )}
             >
               <Icon className="h-5 w-5" />
@@ -70,14 +70,14 @@ export function AdminLayout({ children, title }: AdminLayoutProps) {
         <Link
           to="/"
           onClick={() => setOpen(false)}
-          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground active:bg-muted transition-all duration-200 active:scale-95"
         >
           <ChevronLeft className="h-5 w-5" />
           Voltar ao App
         </Link>
         <button
           onClick={signOut}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-destructive hover:bg-destructive/10 transition-colors"
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-destructive active:bg-destructive/10 transition-all duration-200 active:scale-95"
         >
           <LogOut className="h-5 w-5" />
           Sair
