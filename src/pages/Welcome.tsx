@@ -16,14 +16,14 @@ export default function Welcome() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="min-h-screen min-h-[100dvh] flex items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-screen min-h-[100dvh] flex flex-col bg-background">
       {/* Main content */}
       <div className="flex-1 flex flex-col items-center justify-center p-6">
         {/* Logo and branding */}
@@ -53,7 +53,7 @@ export default function Welcome() {
       <div className="p-6 pb-8">
         <Button
           variant="ghost"
-          className="w-full text-muted-foreground hover:text-foreground"
+          className="w-full text-muted-foreground active:bg-muted min-h-[44px]"
           onClick={() => navigate('/admin-login')}
         >
           <Shield className="mr-2 h-4 w-4" />

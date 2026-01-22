@@ -47,7 +47,7 @@ export function BottomNav() {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card border-t border-border safe-area-inset-bottom">
-      <div className="flex items-center justify-around h-16 max-w-lg mx-auto px-2">
+      <div className="flex items-center justify-around h-[56px] max-w-lg mx-auto px-2">
         {navItems.map((item) => {
           const isActive = location.pathname === item.href;
           const Icon = item.icon;
@@ -57,7 +57,7 @@ export function BottomNav() {
               key={item.href}
               to={item.href}
               className={cn(
-                'flex flex-col items-center justify-center flex-1 h-full py-2 px-1 transition-all duration-200 active:scale-95',
+                'flex flex-col items-center justify-center flex-1 h-full min-h-[44px] min-w-[44px] py-2 px-1 transition-all duration-200 active:scale-95',
                 isActive 
                   ? 'text-primary' 
                   : 'text-muted-foreground'
