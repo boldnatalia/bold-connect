@@ -172,9 +172,24 @@
     @apply bg-success/15 text-success border-success/30;
   }
 
-  /* Premium card effect */
+  /* Premium card effect - Mobile-first with active states */
   .card-premium {
-    @apply bg-card border border-border/50 shadow-sm hover:shadow-md transition-shadow duration-300;
+    @apply bg-card border border-border/50 shadow-sm transition-all duration-200 active:scale-[0.98] active:bg-muted/30;
+  }
+
+  /* Touch-friendly card interaction */
+  .touch-card {
+    @apply transition-all duration-200 active:scale-[0.98] active:bg-muted/30;
+  }
+
+  /* Mobile-safe hover (only on devices with hover capability) */
+  @media (hover: hover) and (pointer: fine) {
+    .card-premium:hover {
+      @apply shadow-md;
+    }
+    .touch-card:hover {
+      @apply bg-muted/50;
+    }
   }
 
   /* Glass effect */

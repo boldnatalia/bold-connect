@@ -102,7 +102,7 @@ export default function Manual() {
                 value={section.id}
                 className="border rounded-lg px-4 bg-card"
               >
-                <AccordionTrigger className="hover:no-underline py-4">
+                <AccordionTrigger className="py-4 [&[data-state=open]>svg]:rotate-180">
                   <div className="flex items-center gap-3">
                     <Icon className="h-4 w-4 text-primary" />
                     <span className="font-medium text-sm">{section.title}</span>
@@ -122,7 +122,7 @@ export default function Manual() {
             value="cardapio"
             className="border rounded-lg px-4 bg-card"
           >
-            <AccordionTrigger className="hover:no-underline py-4">
+            <AccordionTrigger className="py-4 [&[data-state=open]>svg]:rotate-180">
               <div className="flex items-center gap-3">
                 <UtensilsCrossed className="h-4 w-4 text-primary" />
                 <span className="font-medium text-sm">Cardápio</span>

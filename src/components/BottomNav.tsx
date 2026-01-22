@@ -57,10 +57,10 @@ export function BottomNav() {
               key={item.href}
               to={item.href}
               className={cn(
-                'flex flex-col items-center justify-center flex-1 h-full py-2 px-1 transition-colors',
+                'flex flex-col items-center justify-center flex-1 h-full py-2 px-1 transition-all duration-200 active:scale-95',
                 isActive 
                   ? 'text-primary' 
-                  : 'text-muted-foreground hover:text-foreground'
+                  : 'text-muted-foreground'
               )}
             >
               <Icon className={cn('h-5 w-5', isActive && 'stroke-[2.5]')} />
