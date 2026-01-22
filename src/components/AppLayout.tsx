@@ -11,7 +11,7 @@ interface AppLayoutProps {
 
 export function AppLayout({ children, title, showBack, rightAction }: AppLayoutProps) {
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen min-h-[100dvh] bg-background flex flex-col">
       <Header title={title} showBack={showBack} rightAction={rightAction} />
       <main className="flex-1 pb-20 overflow-y-auto">
         {children}
