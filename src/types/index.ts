@@ -2,7 +2,39 @@
 
 export type TicketStatus = 'pending' | 'in_progress' | 'resolved';
 
-export type AppRole = 'admin' | 'tenant';
+export type AppRole = 'admin' | 'tenant' | 'recepcao' | 'central_atendimento';
+
+// Reception message types
+export interface ReceptionMessage {
+  id: string;
+  title: string;
+  content: string;
+  category: string | null;
+  has_input_field: boolean;
+  input_field_label: string | null;
+  input_field_placeholder: string | null;
+  is_active: boolean;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ReceptionNotification {
+  id: string;
+  sender_id: string;
+  recipient_id: string;
+  message_id: string | null;
+  custom_content: string | null;
+  input_value: string | null;
+  requires_response: boolean;
+  response_value: string | null;
+  responded_at: string | null;
+  is_read: boolean;
+  created_at: string;
+  message?: ReceptionMessage;
+  recipient?: Profile;
+  sender?: Profile;
+}
 
 export interface Floor {
   id: string;

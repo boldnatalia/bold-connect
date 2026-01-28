@@ -2,17 +2,24 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { useEffect } from 'react';
-import { Loader2, Shield } from 'lucide-react';
+import { Loader2, Shield, DoorOpen } from 'lucide-react';
 
 export default function Welcome() {
   const navigate = useNavigate();
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, isCentralAtendimento, isRecepcao } = useAuth();
 
   useEffect(() => {
     if (user && !isLoading) {
-      navigate('/');
+      // Redirect based on role
+      if (isCentralAtendimento) {
+        navigate('/admin');
+      } else if (isRecepcao) {
+        navigate('/recepcao');
+      } else {
+        navigate('/');
+      }
     }
-  }, [user, isLoading, navigate]);
+  }, [user, isLoading, isCentralAtendimento, isRecepcao, navigate]);
 
   if (isLoading) {
     return (
@@ -49,15 +56,23 @@ export default function Welcome() {
         </Button>
       </div>
 
-      {/* Footer with admin access */}
-      <div className="p-6 pb-8">
+      {/* Footer with staff access */}
+      <div className="p-6 pb-8 space-y-2">
+        <Button
+          variant="ghost"
+          className="w-full text-muted-foreground active:bg-muted min-h-[44px]"
+          onClick={() => navigate('/reception-login')}
+        >
+          <DoorOpen className="mr-2 h-4 w-4" />
+          Acesso Recepção
+        </Button>
         <Button
           variant="ghost"
           className="w-full text-muted-foreground active:bg-muted min-h-[44px]"
           onClick={() => navigate('/admin-login')}
         >
           <Shield className="mr-2 h-4 w-4" />
-          Acesso Administrativo
+          Central de Atendimento
         </Button>
       </div>
     </div>

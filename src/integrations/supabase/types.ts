@@ -229,6 +229,98 @@ export type Database = {
           },
         ]
       }
+      reception_messages: {
+        Row: {
+          category: string | null
+          content: string
+          created_at: string | null
+          has_input_field: boolean | null
+          id: string
+          input_field_label: string | null
+          input_field_placeholder: string | null
+          is_active: boolean | null
+          sort_order: number | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          category?: string | null
+          content: string
+          created_at?: string | null
+          has_input_field?: boolean | null
+          id?: string
+          input_field_label?: string | null
+          input_field_placeholder?: string | null
+          is_active?: boolean | null
+          sort_order?: number | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string | null
+          content?: string
+          created_at?: string | null
+          has_input_field?: boolean | null
+          id?: string
+          input_field_label?: string | null
+          input_field_placeholder?: string | null
+          is_active?: boolean | null
+          sort_order?: number | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      reception_notifications: {
+        Row: {
+          created_at: string | null
+          custom_content: string | null
+          id: string
+          input_value: string | null
+          is_read: boolean | null
+          message_id: string | null
+          recipient_id: string
+          requires_response: boolean | null
+          responded_at: string | null
+          response_value: string | null
+          sender_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          custom_content?: string | null
+          id?: string
+          input_value?: string | null
+          is_read?: boolean | null
+          message_id?: string | null
+          recipient_id: string
+          requires_response?: boolean | null
+          responded_at?: string | null
+          response_value?: string | null
+          sender_id: string
+        }
+        Update: {
+          created_at?: string | null
+          custom_content?: string | null
+          id?: string
+          input_value?: string | null
+          is_read?: boolean | null
+          message_id?: string | null
+          recipient_id?: string
+          requires_response?: boolean | null
+          responded_at?: string | null
+          response_value?: string | null
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reception_notifications_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "reception_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ticket_comments: {
         Row: {
           content: string
@@ -331,6 +423,8 @@ export type Database = {
         Returns: boolean
       }
       is_admin: { Args: never; Returns: boolean }
+      is_central_atendimento: { Args: never; Returns: boolean }
+      is_recepcao: { Args: never; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "tenant" | "recepcao" | "central_atendimento"
