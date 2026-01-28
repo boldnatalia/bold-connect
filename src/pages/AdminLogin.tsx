@@ -16,19 +16,19 @@ const loginSchema = z.object({
 
 export default function AdminLogin() {
   const navigate = useNavigate();
-  const { signIn, user, isAdmin, isLoading: authLoading } = useAuth();
+  const { signIn, user, isAdmin, isCentralAtendimento, isLoading: authLoading } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  // Redirect if already logged in as admin
+  // Redirect if already logged in as admin/central
   useEffect(() => {
-    if (user && isAdmin && !authLoading) {
+    if (user && (isAdmin || isCentralAtendimento) && !authLoading) {
       navigate('/admin');
     }
-  }, [user, isAdmin, authLoading, navigate]);
+  }, [user, isAdmin, isCentralAtendimento, authLoading, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,15 +69,15 @@ export default function AdminLogin() {
           </div>
           <div className="text-center">
             <h1 className="text-2xl font-bold text-foreground">Bold Workplace</h1>
-            <p className="text-muted-foreground text-sm">Painel Administrativo</p>
+            <p className="text-muted-foreground text-sm">Central de Atendimento</p>
           </div>
         </div>
 
         <Card className="border-0 shadow-lg">
           <CardHeader className="space-y-1">
-            <CardTitle className="text-xl">Login Administrativo</CardTitle>
+            <CardTitle className="text-xl">Acesso Central</CardTitle>
             <CardDescription>
-              Acesso restrito para administradores
+              Acesso restrito para equipe de atendimento
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -137,7 +137,7 @@ export default function AdminLogin() {
                     Entrando...
                   </>
                 ) : (
-                  'Entrar como Administrador'
+                  'Entrar'
                 )}
               </Button>
             </form>

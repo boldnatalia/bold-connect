@@ -11,7 +11,9 @@ import {
   Users,
   FileText,
   Settings,
-  LogOut
+  LogOut,
+  Send,
+  History
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -19,10 +21,9 @@ interface NavItem {
   icon: React.ElementType;
   label: string;
   href: string;
-  adminOnly?: boolean;
 }
 
-const userNavItems: NavItem[] = [
+const clientNavItems: NavItem[] = [
   { icon: Home, label: 'Início', href: '/' },
   { icon: MessageSquare, label: 'Chamados', href: '/tickets' },
   { icon: Bell, label: 'Avisos', href: '/announcements' },
@@ -30,20 +31,37 @@ const userNavItems: NavItem[] = [
   { icon: BookOpen, label: 'Manual', href: '/manual' },
 ];
 
-const adminNavItems: NavItem[] = [
+const centralAtendimentoNavItems: NavItem[] = [
   { icon: Home, label: 'Dashboard', href: '/admin' },
   { icon: MessageSquare, label: 'Chamados', href: '/admin/tickets' },
   { icon: Bell, label: 'Avisos', href: '/admin/announcements' },
   { icon: FileText, label: 'Templates', href: '/admin/templates' },
-  { icon: UtensilsCrossed, label: 'Cardápio', href: '/admin/menu' },
   { icon: Users, label: 'Usuários', href: '/admin/users' },
+];
+
+const receptionNavItems: NavItem[] = [
+  { icon: Home, label: 'Início', href: '/recepcao' },
+  { icon: Send, label: 'Enviar', href: '/recepcao/enviar' },
+  { icon: History, label: 'Histórico', href: '/recepcao/historico' },
+  { icon: MessageSquare, label: 'Chamados', href: '/tickets' },
 ];
 
 export function BottomNav() {
   const location = useLocation();
-  const { isAdmin, signOut } = useAuth();
+  const { isAdmin, isCentralAtendimento, isRecepcao } = useAuth();
 
-  const navItems = isAdmin ? adminNavItems.slice(0, 5) : userNavItems.slice(0, 5);
+  let navItems: NavItem[];
+  
+  if (isCentralAtendimento) {
+    navItems = centralAtendimentoNavItems;
+  } else if (isRecepcao) {
+    navItems = receptionNavItems;
+  } else {
+    navItems = clientNavItems;
+  }
+
+  // Only show first 5 items
+  navItems = navItems.slice(0, 5);
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card border-t border-border safe-area-inset-bottom">

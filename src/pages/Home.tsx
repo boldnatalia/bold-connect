@@ -2,6 +2,7 @@ import { AppLayout } from '@/components/AppLayout';
 import { useAuth } from '@/hooks/useAuth';
 import { useTickets } from '@/hooks/useTickets';
 import { useAnnouncements } from '@/hooks/useAnnouncements';
+import { ClientNotifications } from '@/components/ClientNotifications';
 import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -47,6 +48,9 @@ export default function Home() {
             {profile?.company} • Sala {profile?.room}
           </p>
         </div>
+
+        {/* Reception Notifications */}
+        <ClientNotifications />
 
         {/* Quick Actions */}
         <div className="grid grid-cols-4 gap-3">

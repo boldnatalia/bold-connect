@@ -9,6 +9,9 @@ interface AuthContextType {
   profile: Profile | null;
   role: AppRole | null;
   isAdmin: boolean;
+  isCentralAtendimento: boolean;
+  isRecepcao: boolean;
+  isCliente: boolean;
   isLoading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signUp: (email: string, password: string, profileData: Omit<Profile, 'id' | 'user_id' | 'created_at' | 'updated_at' | 'avatar_url'>) => Promise<{ error: Error | null }>;
@@ -153,6 +156,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         profile,
         role,
         isAdmin: role === 'admin',
+        isCentralAtendimento: role === 'central_atendimento' || role === 'admin',
+        isRecepcao: role === 'recepcao',
+        isCliente: role === 'tenant',
         isLoading,
         signIn,
         signUp,

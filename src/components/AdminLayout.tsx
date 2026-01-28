@@ -39,7 +39,7 @@ export function AdminLayout({ children, title }: AdminLayoutProps) {
   const NavContent = () => (
     <div className="flex flex-col h-full">
       <div className="p-4 border-b border-border">
-        <h2 className="font-bold text-lg text-primary">Bold Admin</h2>
+        <h2 className="font-bold text-lg text-primary">Central de Atendimento</h2>
         <p className="text-xs text-muted-foreground">{profile?.full_name}</p>
       </div>
       
