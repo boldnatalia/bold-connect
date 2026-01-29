@@ -319,6 +319,13 @@ export type Database = {
             referencedRelation: "reception_messages"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "reception_notifications_recipient_id_fkey"
+            columns: ["recipient_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
         ]
       }
       ticket_comments: {
