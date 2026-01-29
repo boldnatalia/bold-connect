@@ -8,15 +8,14 @@ export function useReceptionNotifications() {
   const queryClient = useQueryClient();
 
   const notificationsQuery = useQuery({
-    queryKey: ['reception-notifications', user?.id],
+    queryKey: ['reception-notifications', user?.id, isCliente],
     queryFn: async () => {
       let query = supabase
         .from('reception_notifications')
         .select(`
           *,
           message:reception_messages(*),
-          recipient:profiles!reception_notifications_recipient_id_fkey(full_name, company, room, floor:floors(name)),
-          sender:profiles!reception_notifications_sender_id_fkey(full_name)
+          recipient:profiles(full_name, company, room, floor:floors(name))
         `)
         .order('created_at', { ascending: false });
 
