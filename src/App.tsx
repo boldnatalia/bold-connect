@@ -37,6 +37,7 @@ import AdminUsers from "./pages/admin/Users";
 import ReceptionDashboard from "./pages/reception/Dashboard";
 import ReceptionSendNotification from "./pages/reception/SendNotification";
 import ReceptionHistory from "./pages/reception/History";
+import ReceptionMassAnnouncement from "./pages/reception/MassAnnouncement";
 
 import NotFound from "./pages/NotFound";
 
@@ -81,6 +82,7 @@ const App = () => (
             <Route path="/recepcao" element={<ProtectedRoute requireRole="recepcao"><ReceptionDashboard /></ProtectedRoute>} />
             <Route path="/recepcao/enviar" element={<ProtectedRoute requireRole="recepcao"><ReceptionSendNotification /></ProtectedRoute>} />
             <Route path="/recepcao/historico" element={<ProtectedRoute requireRole="recepcao"><ReceptionHistory /></ProtectedRoute>} />
+            <Route path="/recepcao/aviso-geral" element={<ProtectedRoute requireRole="recepcao"><ReceptionMassAnnouncement /></ProtectedRoute>} />
 
             {/* Catch all */}
             <Route path="*" element={<NotFound />} />
