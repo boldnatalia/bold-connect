@@ -41,9 +41,9 @@ const centralAtendimentoNavItems: NavItem[] = [
 
 const receptionNavItems: NavItem[] = [
   { icon: Home, label: 'Início', href: '/recepcao' },
-  { icon: Send, label: 'Enviar', href: '/recepcao/enviar' },
+  { icon: Send, label: 'Avisar Cliente', href: '/recepcao/enviar' },
+  { icon: Bell, label: 'Aviso Geral', href: '/recepcao/aviso-geral' },
   { icon: History, label: 'Histórico', href: '/recepcao/historico' },
-  { icon: MessageSquare, label: 'Chamados', href: '/tickets' },
 ];
 
 export function BottomNav() {
