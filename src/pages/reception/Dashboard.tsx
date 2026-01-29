@@ -1,102 +1,180 @@
 import { AppLayout } from '@/components/AppLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Bell, MessageSquare, Send, Users } from 'lucide-react';
+import { Bell, MessageSquare, Send, Users, Megaphone, History, Clock, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useReceptionNotifications } from '@/hooks/useReceptionNotifications';
+import { useAnnouncements } from '@/hooks/useAnnouncements';
+import { formatDistanceToNow } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 export default function ReceptionDashboard() {
-  const { notifications, pendingResponses } = useReceptionNotifications();
+  const { notifications, pendingResponses, isLoading } = useReceptionNotifications();
+  const { announcements } = useAnnouncements();
 
   const todayNotifications = notifications.filter(n => {
     const today = new Date().toDateString();
     return new Date(n.created_at).toDateString() === today;
   });
 
-  const stats = [
-    {
-      title: 'Avisos Enviados Hoje',
-      value: todayNotifications.length,
-      icon: Send,
-      color: 'text-primary',
-      bgColor: 'bg-primary/10',
-    },
-    {
-      title: 'Aguardando Resposta',
-      value: pendingResponses.length,
-      icon: MessageSquare,
-      color: 'text-warning',
-      bgColor: 'bg-warning/10',
-    },
-  ];
+  const activeAnnouncements = announcements.filter(a => a.is_active);
 
   return (
-    <AppLayout title="Recepção">
+    <AppLayout title="Portaria">
       <div className="p-4 space-y-6">
-        {/* Quick Actions */}
-        <div className="grid grid-cols-2 gap-3">
+        {/* Quick Actions - Two main features */}
+        <div className="space-y-3">
+          <h3 className="font-semibold text-lg">Avisos</h3>
+          
+          {/* Individual Notification */}
           <Link to="/recepcao/enviar">
-            <Button className="w-full h-20 flex flex-col gap-2" size="lg">
-              <Bell className="h-6 w-6" />
-              <span className="text-sm">Enviar Aviso</span>
-            </Button>
+            <Card className="card-premium hover:border-primary/50 transition-colors">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 rounded-xl bg-primary/10">
+                    <Send className="h-6 w-6 text-primary" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-semibold">Avisar Cliente</p>
+                    <p className="text-sm text-muted-foreground">
+                      Enviar aviso individual com mensagens prontas
+                    </p>
+                  </div>
+                  <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                </div>
+              </CardContent>
+            </Card>
           </Link>
-          <Link to="/recepcao/historico">
-            <Button variant="outline" className="w-full h-20 flex flex-col gap-2" size="lg">
-              <MessageSquare className="h-6 w-6" />
-              <span className="text-sm">Histórico</span>
-            </Button>
+
+          {/* Mass Announcement */}
+          <Link to="/recepcao/aviso-geral">
+            <Card className="card-premium hover:border-warning/50 transition-colors">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 rounded-xl bg-warning/10">
+                    <Megaphone className="h-6 w-6 text-warning" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-semibold">Aviso Geral</p>
+                    <p className="text-sm text-muted-foreground">
+                      Enviar aviso para todos os clientes
+                    </p>
+                  </div>
+                  <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                </div>
+              </CardContent>
+            </Card>
           </Link>
         </div>
 
-        {/* Stats */}
+        {/* Stats Row */}
         <div className="grid grid-cols-2 gap-3">
-          {stats.map((stat) => {
-            const Icon = stat.icon;
-            return (
-              <Card key={stat.title}>
-                <CardHeader className="flex flex-row items-center justify-between pb-2 px-4 pt-4">
-                  <CardTitle className="text-xs font-medium text-muted-foreground">
-                    {stat.title}
-                  </CardTitle>
-                  <div className={`p-2 rounded-lg ${stat.bgColor}`}>
-                    <Icon className={`h-4 w-4 ${stat.color}`} />
-                  </div>
-                </CardHeader>
-                <CardContent className="px-4 pb-4">
-                  <div className="text-2xl font-bold">{stat.value}</div>
-                </CardContent>
-              </Card>
-            );
-          })}
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-primary/10">
+                  <Send className="h-4 w-4 text-primary" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">{todayNotifications.length}</p>
+                  <p className="text-xs text-muted-foreground">Enviados hoje</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-warning/10">
+                  <MessageSquare className="h-4 w-4 text-warning" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">{pendingResponses.length}</p>
+                  <p className="text-xs text-muted-foreground">Aguardando resposta</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Pending Responses */}
         {pendingResponses.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2">
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="font-semibold flex items-center gap-2">
                 <MessageSquare className="h-4 w-4 text-warning" />
                 Aguardando Respostas
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
+              </h3>
+            </div>
+            <div className="space-y-2">
               {pendingResponses.slice(0, 5).map((notification) => (
-                <div 
-                  key={notification.id} 
-                  className="p-3 bg-warning/10 rounded-lg border border-warning/20"
-                >
-                  <p className="text-sm font-medium">
-                    {notification.recipient?.full_name || 'Cliente'}
-                  </p>
+                <Card key={notification.id} className="border-warning/30">
+                  <CardContent className="p-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium text-sm">
+                          {notification.recipient?.full_name || 'Cliente'}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {notification.message?.title || 'Aviso'}
+                        </p>
+                      </div>
+                      <div className="text-xs text-muted-foreground flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        {formatDistanceToNow(new Date(notification.created_at), {
+                          addSuffix: true,
+                          locale: ptBR,
+                        })}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Active Announcements */}
+        {activeAnnouncements.length > 0 && (
+          <div className="space-y-3">
+            <h3 className="font-semibold flex items-center gap-2">
+              <Bell className="h-4 w-4 text-primary" />
+              Avisos Gerais Ativos
+            </h3>
+            <div className="space-y-2">
+              {activeAnnouncements.slice(0, 3).map((announcement) => (
+                <Card key={announcement.id}>
+                  <CardContent className="p-3">
+                    <p className="font-medium text-sm">{announcement.title}</p>
+                    <p className="text-xs text-muted-foreground line-clamp-2 mt-1">
+                      {announcement.content}
+                    </p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* History Link */}
+        <Link to="/recepcao/historico">
+          <Card className="card-premium">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="p-3 rounded-lg bg-muted">
+                  <History className="h-5 w-5 text-muted-foreground" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-medium">Histórico de Avisos</p>
                   <p className="text-xs text-muted-foreground">
-                    {notification.message?.title || notification.custom_content}
+                    Ver todos os avisos enviados
                   </p>
                 </div>
-              ))}
+                <ChevronRight className="h-5 w-5 text-muted-foreground" />
+              </div>
             </CardContent>
           </Card>
-        )}
+        </Link>
       </div>
     </AppLayout>
   );

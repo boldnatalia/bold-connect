@@ -30,6 +30,16 @@ export function ProtectedRoute({ children, requireAdmin = false, requireRole }: 
     return <Navigate to="/welcome" state={{ from: location }} replace />;
   }
 
+  // Auto-redirect based on role for root path
+  if (location.pathname === '/' && !requireRole) {
+    if (isCentralAtendimento) {
+      return <Navigate to="/admin" replace />;
+    }
+    if (isRecepcao) {
+      return <Navigate to="/recepcao" replace />;
+    }
+  }
+
   // Legacy support for requireAdmin
   if (requireAdmin && !isAdmin && !isCentralAtendimento) {
     return <Navigate to="/" replace />;
