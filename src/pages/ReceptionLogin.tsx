@@ -31,8 +31,8 @@ export default function ReceptionLogin() {
       return;
     }
 
-    // The auth hook will redirect based on role
-    navigate('/recepcao');
+    // Redirect to welcome - it will handle role-based redirection
+    navigate('/welcome');
   };
 
   return (
