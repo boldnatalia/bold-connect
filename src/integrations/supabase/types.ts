@@ -326,6 +326,13 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["user_id"]
           },
+          {
+            foreignKeyName: "reception_notifications_recipient_id_fkey"
+            columns: ["recipient_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_secure"
+            referencedColumns: ["user_id"]
+          },
         ]
       }
       ticket_comments: {
@@ -419,9 +426,62 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      profiles_secure: {
+        Row: {
+          avatar_url: string | null
+          company: string | null
+          cpf: string | null
+          created_at: string | null
+          floor_id: string | null
+          full_name: string | null
+          id: string | null
+          is_active: boolean | null
+          room: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          company?: string | null
+          cpf?: never
+          created_at?: string | null
+          floor_id?: string | null
+          full_name?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          room?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          company?: string | null
+          cpf?: never
+          created_at?: string | null
+          floor_id?: string | null
+          full_name?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          room?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_floor_id_fkey"
+            columns: ["floor_id"]
+            isOneToOne: false
+            referencedRelation: "floors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
+      get_masked_cpf: {
+        Args: { original_cpf: string; profile_user_id: string }
+        Returns: string
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

@@ -6,8 +6,9 @@ export function useProfiles() {
   const profilesQuery = useQuery({
     queryKey: ['profiles'],
     queryFn: async () => {
+      // Use the secure view that masks CPF for recepcao users
       const { data, error } = await supabase
-        .from('profiles')
+        .from('profiles_secure')
         .select('*, floor:floors(*)')
         .order('company', { ascending: true })
         .order('full_name', { ascending: true });
