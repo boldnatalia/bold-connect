@@ -12,6 +12,7 @@ import Login from "./pages/Login";
 import AdminLogin from "./pages/AdminLogin";
 import ReceptionLogin from "./pages/ReceptionLogin";
 import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 
 // Client pages
 import Home from "./pages/Home";
@@ -57,6 +58,7 @@ const App = () => (
             <Route path="/admin-login" element={<AdminLogin />} />
             <Route path="/reception-login" element={<ReceptionLogin />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
 
             {/* Protected client routes */}
             <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
