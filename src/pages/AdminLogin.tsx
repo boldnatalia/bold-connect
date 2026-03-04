@@ -6,7 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, Eye, EyeOff, ArrowLeft, Shield } from 'lucide-react';
+import { Loader2, Eye, EyeOff, ArrowLeft } from 'lucide-react';
+import logoIcon from '@/assets/logo-icon.jpeg';
 import { z } from 'zod';
 
 const loginSchema = z.object({
@@ -64,9 +65,7 @@ export default function AdminLogin() {
       <div className="w-full max-w-sm space-y-6">
         {/* Logo */}
         <div className="flex flex-col items-center gap-3">
-          <div className="h-16 w-16 rounded-2xl bg-primary flex items-center justify-center shadow-lg">
-            <Shield className="h-8 w-8 text-primary-foreground" />
-          </div>
+          <img src={logoIcon} alt="Bold Workplace" className="w-16 h-16 rounded-2xl object-contain" />
           <div className="text-center">
             <h1 className="text-2xl font-bold text-foreground">Bold Workplace</h1>
             <p className="text-muted-foreground text-sm">Central de Atendimento</p>

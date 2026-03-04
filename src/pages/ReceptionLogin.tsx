@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, ArrowLeft, DoorOpen } from 'lucide-react';
+import { Loader2, ArrowLeft } from 'lucide-react';
+import logoIcon from '@/assets/logo-icon.jpeg';
 
 export default function ReceptionLogin() {
   const [email, setEmail] = useState('');
@@ -40,9 +41,7 @@ export default function ReceptionLogin() {
       <div className="w-full max-w-sm space-y-6">
         {/* Logo */}
         <div className="flex flex-col items-center gap-3">
-          <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center">
-            <DoorOpen className="h-8 w-8 text-primary" />
-          </div>
+          <img src={logoIcon} alt="Bold Workplace" className="w-16 h-16 rounded-2xl object-contain" />
           <div className="text-center">
             <h1 className="text-2xl font-bold">Recepção</h1>
             <p className="text-sm text-muted-foreground mt-1">
