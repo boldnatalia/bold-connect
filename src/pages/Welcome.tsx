@@ -4,6 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useEffect } from 'react';
 import { Loader2, Shield, DoorOpen } from 'lucide-react';
 import logoBold from '@/assets/logo-bold.jpeg';
+import logoBoldFull from '@/assets/logo-bold-full.jpeg';
 
 export default function Welcome() {
   const navigate = useNavigate();
@@ -35,14 +36,8 @@ export default function Welcome() {
       {/* Main content */}
       <div className="flex-1 flex flex-col items-center justify-center p-6">
         {/* Logo and branding */}
-        <div className="flex flex-col items-center gap-4 mb-12">
-          <img src={logoBold} alt="Bold Workplace" className="h-24 w-24 rounded-3xl shadow-xl object-cover" />
-          <div className="text-center">
-            <h1 className="text-3xl font-bold text-foreground">Bold Workplace</h1>
-            <p className="text-muted-foreground mt-2">
-              Seu espaço corporativo inteligente
-            </p>
-          </div>
+        <div className="flex flex-col items-center gap-6 mb-12">
+          <img src={logoBoldFull} alt="Bold Workplace" className="h-20 object-contain" />
         </div>
 
         {/* Main action button */}
