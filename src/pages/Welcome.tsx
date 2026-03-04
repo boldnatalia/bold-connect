@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { useEffect } from 'react';
 import { Loader2, Shield, DoorOpen } from 'lucide-react';
+import logoBold from '@/assets/logo-bold.jpeg';
 
 export default function Welcome() {
   const navigate = useNavigate();
@@ -35,9 +36,7 @@ export default function Welcome() {
       <div className="flex-1 flex flex-col items-center justify-center p-6">
         {/* Logo and branding */}
         <div className="flex flex-col items-center gap-4 mb-12">
-          <div className="h-24 w-24 rounded-3xl bg-primary flex items-center justify-center shadow-xl">
-            <span className="text-primary-foreground font-bold text-5xl">B</span>
-          </div>
+          <img src={logoBold} alt="Bold Workplace" className="h-24 w-24 rounded-3xl shadow-xl object-cover" />
           <div className="text-center">
             <h1 className="text-3xl font-bold text-foreground">Bold Workplace</h1>
             <p className="text-muted-foreground mt-2">
