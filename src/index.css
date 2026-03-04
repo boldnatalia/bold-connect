@@ -19,9 +19,9 @@
     --popover: 0 0% 100%;
     --popover-foreground: 220 20% 10%;
 
-    /* Primary - Deep Navy (Corporate & Premium) */
-    --primary: 220 60% 20%;
-    --primary-foreground: 0 0% 100%;
+    /* Primary - Bold Gold (#ecb23a) */
+    --primary: 43 82% 55%;
+    --primary-foreground: 220 20% 10%;
 
     /* Secondary - Warm Gray */
     --secondary: 220 10% 95%;
