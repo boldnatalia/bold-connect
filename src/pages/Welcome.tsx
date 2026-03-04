@@ -32,7 +32,7 @@ export default function Welcome() {
   }
 
   return (
-    <div className="min-h-screen min-h-[100dvh] flex flex-col bg-background">
+    <div className="min-h-screen min-h-[100dvh] flex flex-col bg-white">
       {/* Main content */}
       <div className="flex-1 flex flex-col items-center justify-center p-6">
         {/* Logo and branding */}
