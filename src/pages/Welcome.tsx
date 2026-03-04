@@ -36,7 +36,7 @@ export default function Welcome() {
       <div className="flex-1 flex flex-col items-center justify-center p-6">
         {/* Logo and branding */}
         <div className="flex flex-col items-center gap-4 mb-12">
-          <img src={logoIcon} alt="Bold Workplace" className="w-32 h-32 object-contain rounded-2xl" />
+          <img src={logoIcon} alt="Bold Workplace" className="w-20 h-20 object-contain rounded-2xl" />
           <h1 className="text-2xl font-bold tracking-tight text-foreground">Bold Workplace</h1>
         </div>
 
