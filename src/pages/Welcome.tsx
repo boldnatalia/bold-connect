@@ -37,7 +37,7 @@ export default function Welcome() {
       <div className="flex-1 flex flex-col items-center justify-center p-6">
         {/* Logo and branding */}
         <div className="flex flex-col items-center gap-6 mb-12">
-          <img src={logoBoldFull} alt="Bold Workplace" className="h-20 object-contain" />
+          <img src={logoBoldFull} alt="Bold Workplace" className="w-64 object-contain" />
         </div>
 
         {/* Main action button */}
