@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, ArrowLeft, CheckCircle } from 'lucide-react';
 import { z } from 'zod';
+import logoBold from '@/assets/logo-bold.jpeg';
 
 const emailSchema = z.object({
   email: z.string().email('Email inválido'),
@@ -72,9 +73,7 @@ export default function ForgotPassword() {
       <div className="w-full max-w-sm space-y-6">
         {/* Logo */}
         <div className="flex flex-col items-center gap-3">
-          <div className="h-16 w-16 rounded-2xl bg-primary flex items-center justify-center shadow-lg">
-            <span className="text-primary-foreground font-bold text-3xl">B</span>
-          </div>
+          <img src={logoBold} alt="Bold Workplace" className="h-16 w-16 rounded-2xl shadow-lg object-cover" />
           <div className="text-center">
             <h1 className="text-2xl font-bold text-foreground">Bold Workplace</h1>
             <p className="text-muted-foreground text-sm">Recuperar senha</p>
