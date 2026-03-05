@@ -48,7 +48,7 @@ export default function ReceptionLogin() {
           <div className="text-center">
             <h1 className="text-2xl font-bold text-foreground">Recepção</h1>
             <p className="text-sm text-muted-foreground mt-1">
-              Acesso exclusivo para portaria
+              Acesso exclusivo recepção
             </p>
           </div>
         </div>
