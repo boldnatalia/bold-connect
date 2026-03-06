@@ -64,7 +64,7 @@ export default function Login() {
           <img src={logoBold} alt="Bold Workplace" className="h-16 w-16 rounded-2xl shadow-lg object-cover" />
           <div className="text-center">
             <h1 className="text-2xl font-bold text-foreground">Bold Workplace</h1>
-            <p className="text-muted-foreground text-sm">Bem-vindo</p>
+            <p className="text-muted-foreground text-sm">Seja muito bem-vindo!</p>
           </div>
         </div>
 
