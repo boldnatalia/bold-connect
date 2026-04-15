@@ -185,27 +185,25 @@ export function ClientNotifications() {
         </CardContent>
       </Card>
 
-      {/* Response Dialog */}
+      {/* Response Sheet - mobile friendly */}
       <Dialog open={!!respondingTo} onOpenChange={(open) => !open && setRespondingTo(null)}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle>Responder</DialogTitle>
-            <DialogDescription>
+        <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-sm mx-auto rounded-xl p-4">
+          <DialogHeader className="pb-1">
+            <DialogTitle className="text-base">Responder</DialogTitle>
+            <DialogDescription className="text-sm">
               {respondingNotification?.message?.content}
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
-            {/* Quick Reply Chips */}
-            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+          <div className="space-y-3">
+            {/* Quick Reply Chips - wrap instead of scroll */}
+            <div className="flex flex-wrap gap-2">
               {quickReplies.map((reply) => (
                 <button
                   key={reply}
                   type="button"
-                  className="flex-shrink-0 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium border border-primary/20 hover:bg-primary/20 active:scale-95 transition-all min-h-[40px] whitespace-nowrap"
+                  className="px-3 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium border border-primary/20 active:scale-95 transition-all min-h-[40px]"
                   onClick={() => {
                     if (respondingTo) {
-                      setResponseValue(reply);
-                      // Send immediately
                       handleQuickReply(respondingTo, reply);
                     }
                   }}
@@ -216,12 +214,12 @@ export function ClientNotifications() {
               ))}
             </div>
 
-            <div className="relative flex items-center gap-2">
+            <div className="flex items-center gap-2">
               <Input
                 value={responseValue}
                 onChange={(e) => setResponseValue(e.target.value)}
-                placeholder={respondingNotification?.message?.input_field_label || 'Ou digite sua resposta...'}
-                className="min-h-[44px]"
+                placeholder="Ou digite sua resposta..."
+                className="min-h-[44px] flex-1"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && respondingTo && responseValue.trim()) {
                     handleRespond(respondingTo);
@@ -241,15 +239,6 @@ export function ClientNotifications() {
                 )}
               </Button>
             </div>
-
-            <Button
-              variant="ghost"
-              className="w-full text-muted-foreground"
-              onClick={() => setRespondingTo(null)}
-            >
-              <X className="h-4 w-4 mr-2" />
-              Cancelar
-            </Button>
           </div>
         </DialogContent>
       </Dialog>
