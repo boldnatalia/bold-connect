@@ -43,7 +43,10 @@ export default function SendNotification() {
       return;
     }
 
-    if (selectedMessageData?.has_input_field && !inputValue.trim()) {
+    // For messages that require client response (e.g., iFood codes), don't require input from reception
+    const requiresClientResponse = selectedMessageData?.has_input_field && selectedMessageData.category === 'Códigos';
+    
+    if (selectedMessageData?.has_input_field && !requiresClientResponse && !inputValue.trim()) {
       toast({
         title: 'Erro',
         description: `Preencha o campo: ${selectedMessageData.input_field_label}`,
