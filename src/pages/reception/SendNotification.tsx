@@ -43,7 +43,10 @@ export default function SendNotification() {
       return;
     }
 
-    if (selectedMessageData?.has_input_field && !inputValue.trim()) {
+    // For messages that require client response (e.g., iFood codes), don't require input from reception
+    const requiresClientResponse = selectedMessageData?.has_input_field && selectedMessageData.category === 'Códigos';
+    
+    if (selectedMessageData?.has_input_field && !requiresClientResponse && !inputValue.trim()) {
       toast({
         title: 'Erro',
         description: `Preencha o campo: ${selectedMessageData.input_field_label}`,
@@ -56,8 +59,8 @@ export default function SendNotification() {
       await sendNotification({
         recipientId: selectedRecipient,
         messageId: selectedMessage,
-        inputValue: inputValue.trim() || undefined,
-        requiresResponse: selectedMessageData?.has_input_field && selectedMessageData.category === 'Códigos',
+        inputValue: requiresClientResponse ? undefined : (inputValue.trim() || undefined),
+        requiresResponse: requiresClientResponse,
       });
 
       toast({
@@ -162,8 +165,8 @@ export default function SendNotification() {
           </CardContent>
         </Card>
 
-        {/* Input Field (if required) */}
-        {selectedMessageData?.has_input_field && (
+        {/* Input Field (if required by reception - NOT for client-response messages) */}
+        {selectedMessageData?.has_input_field && !(selectedMessageData.category === 'Códigos') && (
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-base">
@@ -177,6 +180,17 @@ export default function SendNotification() {
                 placeholder={selectedMessageData.input_field_placeholder || ''}
                 className="min-h-[44px]"
               />
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Info for client-response messages */}
+        {selectedMessageData?.has_input_field && selectedMessageData.category === 'Códigos' && (
+          <Card className="border-primary/30 bg-primary/5">
+            <CardContent className="p-4">
+              <p className="text-sm text-muted-foreground">
+                ℹ️ O cliente receberá este aviso e poderá responder com o código diretamente pelo app.
+              </p>
             </CardContent>
           </Card>
         )}
