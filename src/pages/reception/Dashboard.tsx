@@ -1,7 +1,7 @@
 import { AppLayout } from '@/components/AppLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Bell, MessageSquare, Send, Users, Megaphone, History, Clock, ChevronRight } from 'lucide-react';
+import { Bell, MessageSquare, Send, Users, History, Clock, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useReceptionNotifications } from '@/hooks/useReceptionNotifications';
 import { useAnnouncements } from '@/hooks/useAnnouncements';
@@ -46,25 +46,6 @@ export default function ReceptionDashboard() {
             </Card>
           </Link>
 
-          {/* Mass Announcement */}
-          <Link to="/recepcao/aviso-geral">
-            <Card className="card-premium hover:border-warning/50 transition-colors">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 rounded-xl bg-warning/10">
-                    <Megaphone className="h-6 w-6 text-warning" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-semibold">Aviso Geral</p>
-                    <p className="text-sm text-muted-foreground">
-                      Enviar aviso para todos os clientes
-                    </p>
-                  </div>
-                  <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
         </div>
 
         {/* Stats Row */}
