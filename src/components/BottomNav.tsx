@@ -7,6 +7,7 @@ import {
   BookOpen, 
   Building2, 
   DoorOpen,
+  CalendarCheck,
   UtensilsCrossed,
   Users,
   FileText,
@@ -27,7 +28,7 @@ const clientNavItems: NavItem[] = [
   { icon: Home, label: 'Início', href: '/' },
   { icon: MessageSquare, label: 'Chamados', href: '/tickets' },
   { icon: Bell, label: 'Avisos', href: '/announcements' },
-  { icon: DoorOpen, label: 'Salas', href: '/meeting-rooms' },
+  { icon: CalendarCheck, label: 'Reservas', href: '/reserva-salas' },
   { icon: BookOpen, label: 'Manual', href: '/manual' },
 ];
 
