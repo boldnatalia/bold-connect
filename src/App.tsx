@@ -25,6 +25,7 @@ import Menu from "./pages/Menu";
 import Floors from "./pages/Floors";
 import Manual from "./pages/Manual";
 import MeetingRooms from "./pages/MeetingRooms";
+import RoomBooking from "./pages/RoomBooking";
 
 // Central de Atendimento (admin) pages
 import AdminDashboard from "./pages/admin/Dashboard";
@@ -71,6 +72,7 @@ const App = () => (
             <Route path="/floors" element={<ProtectedRoute><Floors /></ProtectedRoute>} />
             <Route path="/manual" element={<ProtectedRoute><Manual /></ProtectedRoute>} />
             <Route path="/meeting-rooms" element={<ProtectedRoute><MeetingRooms /></ProtectedRoute>} />
+            <Route path="/reserva-salas" element={<ProtectedRoute><RoomBooking /></ProtectedRoute>} />
 
             {/* Protected Central de Atendimento (admin) routes */}
             <Route path="/admin" element={<ProtectedRoute requireAdmin><AdminDashboard /></ProtectedRoute>} />
