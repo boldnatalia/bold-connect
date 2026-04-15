@@ -23,6 +23,27 @@ export function ClientNotifications() {
   const [responseValue, setResponseValue] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const quickReplies = [
+    'Estou descendo',
+    'Pode liberar',
+    'Aguarde um momento',
+    'Já estou na portaria',
+  ];
+
+  const handleQuickReply = async (notificationId: string, reply: string) => {
+    setIsSubmitting(true);
+    try {
+      await respondToNotification({ notificationId, responseValue: reply });
+      toast({ title: 'Resposta enviada!', description: 'A recepção foi notificada.' });
+      setRespondingTo(null);
+      setResponseValue('');
+    } catch (error) {
+      toast({ title: 'Erro ao enviar', description: 'Tente novamente', variant: 'destructive' });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const unreadNotifications = notifications.filter(n => !n.is_read);
   const pendingResponses = notifications.filter(n => n.requires_response && !n.response_value);
 
@@ -174,35 +195,61 @@ export function ClientNotifications() {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            <Input
-              value={responseValue}
-              onChange={(e) => setResponseValue(e.target.value)}
-              placeholder={respondingNotification?.message?.input_field_label || 'Digite sua resposta'}
-              className="min-h-[44px]"
-            />
-            <div className="flex gap-2">
+            {/* Quick Reply Chips */}
+            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+              {quickReplies.map((reply) => (
+                <button
+                  key={reply}
+                  type="button"
+                  className="flex-shrink-0 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium border border-primary/20 hover:bg-primary/20 active:scale-95 transition-all min-h-[40px] whitespace-nowrap"
+                  onClick={() => {
+                    if (respondingTo) {
+                      setResponseValue(reply);
+                      // Send immediately
+                      handleQuickReply(respondingTo, reply);
+                    }
+                  }}
+                  disabled={isSubmitting}
+                >
+                  {reply}
+                </button>
+              ))}
+            </div>
+
+            <div className="relative flex items-center gap-2">
+              <Input
+                value={responseValue}
+                onChange={(e) => setResponseValue(e.target.value)}
+                placeholder={respondingNotification?.message?.input_field_label || 'Ou digite sua resposta...'}
+                className="min-h-[44px]"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && respondingTo && responseValue.trim()) {
+                    handleRespond(respondingTo);
+                  }
+                }}
+              />
               <Button
-                variant="outline"
-                className="flex-1"
-                onClick={() => setRespondingTo(null)}
-              >
-                Cancelar
-              </Button>
-              <Button
-                className="flex-1"
+                size="icon"
+                className="h-[44px] w-[44px] shrink-0"
                 onClick={() => respondingTo && handleRespond(respondingTo)}
-                disabled={isSubmitting}
+                disabled={isSubmitting || !responseValue.trim()}
               >
                 {isSubmitting ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
-                  <>
-                    <Send className="h-4 w-4 mr-2" />
-                    Enviar
-                  </>
+                  <Send className="h-4 w-4" />
                 )}
               </Button>
             </div>
+
+            <Button
+              variant="ghost"
+              className="w-full text-muted-foreground"
+              onClick={() => setRespondingTo(null)}
+            >
+              <X className="h-4 w-4 mr-2" />
+              Cancelar
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
