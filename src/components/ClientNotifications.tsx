@@ -185,15 +185,66 @@ export function ClientNotifications() {
         </CardContent>
       </Card>
 
-      {/* Response Dialog */}
+      {/* Response Sheet - mobile friendly */}
       <Dialog open={!!respondingTo} onOpenChange={(open) => !open && setRespondingTo(null)}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle>Responder</DialogTitle>
-            <DialogDescription>
+        <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-sm mx-auto rounded-xl p-4">
+          <DialogHeader className="pb-1">
+            <DialogTitle className="text-base">Responder</DialogTitle>
+            <DialogDescription className="text-sm">
               {respondingNotification?.message?.content}
             </DialogDescription>
           </DialogHeader>
+          <div className="space-y-3">
+            {/* Quick Reply Chips - wrap instead of scroll */}
+            <div className="flex flex-wrap gap-2">
+              {quickReplies.map((reply) => (
+                <button
+                  key={reply}
+                  type="button"
+                  className="px-3 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium border border-primary/20 active:scale-95 transition-all min-h-[40px]"
+                  onClick={() => {
+                    if (respondingTo) {
+                      handleQuickReply(respondingTo, reply);
+                    }
+                  }}
+                  disabled={isSubmitting}
+                >
+                  {reply}
+                </button>
+              ))}
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Input
+                value={responseValue}
+                onChange={(e) => setResponseValue(e.target.value)}
+                placeholder="Ou digite sua resposta..."
+                className="min-h-[44px] flex-1"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && respondingTo && responseValue.trim()) {
+                    handleRespond(respondingTo);
+                  }
+                }}
+              />
+              <Button
+                size="icon"
+                className="h-[44px] w-[44px] shrink-0"
+                onClick={() => respondingTo && handleRespond(respondingTo)}
+                disabled={isSubmitting || !responseValue.trim()}
+              >
+                {isSubmitting ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Send className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
           <div className="space-y-4">
             {/* Quick Reply Chips */}
             <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
