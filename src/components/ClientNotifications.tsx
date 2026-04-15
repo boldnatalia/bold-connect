@@ -23,6 +23,27 @@ export function ClientNotifications() {
   const [responseValue, setResponseValue] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const quickReplies = [
+    'Estou descendo',
+    'Pode liberar',
+    'Aguarde um momento',
+    'Já estou na portaria',
+  ];
+
+  const handleQuickReply = async (notificationId: string, reply: string) => {
+    setIsSubmitting(true);
+    try {
+      await respondToNotification({ notificationId, responseValue: reply });
+      toast({ title: 'Resposta enviada!', description: 'A recepção foi notificada.' });
+      setRespondingTo(null);
+      setResponseValue('');
+    } catch (error) {
+      toast({ title: 'Erro ao enviar', description: 'Tente novamente', variant: 'destructive' });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const unreadNotifications = notifications.filter(n => !n.is_read);
   const pendingResponses = notifications.filter(n => n.requires_response && !n.response_value);
 
