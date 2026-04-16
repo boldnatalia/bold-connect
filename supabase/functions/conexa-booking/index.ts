@@ -31,11 +31,17 @@ serve(async (req) => {
     if (!conexaToken) throw new Error("Token do Conexa não configurado.");
 
     // Busca usuário no Conexa
-    const personResponse = await fetch(`${CONEXA_BASE_URL}/persons?email=${userEmail}`, {
+    const personUrl = `${CONEXA_BASE_URL}/persons?email=${userEmail}`;
+    console.log("Buscando usuário na URL:", personUrl);
+
+    const personResponse = await fetch(personUrl, {
       headers: { 'Authorization': `Bearer ${conexaToken}` }
     });
 
-    if (!personResponse.ok) throw new Error("Falha ao buscar usuário.");
+    if (!personResponse.ok) {
+        const errorText = await personResponse.text();
+        throw new Error(`Status: ${personResponse.status} | URL: ${personUrl} | Detalhes: ${errorText}`);
+    }
 
     const personData = await personResponse.json();
     if (!personData.data || personData.data.length === 0) {
