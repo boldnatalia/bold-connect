@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { AppLayout } from '@/components/AppLayout';
+import { supabase } from '@/integrations/supabase/client';
+import { Loader2 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
