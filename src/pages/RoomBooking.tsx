@@ -54,6 +54,7 @@ export default function RoomBooking() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [startTime, setStartTime] = useState<string | null>(null);
   const [endTime, setEndTime] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const resetSelection = () => {
     setSelectedRoom(null);
@@ -61,16 +62,30 @@ export default function RoomBooking() {
     setEndTime(null);
   };
 
-  const handleConfirmReservation = (
+  const handleConfirmReservation = async (
     roomId: number,
     date: Date,
     start: string,
     end: string,
   ) => {
-    toast.success(
-      `Preparando para enviar: Sala ${roomId}, Data ${format(date, 'dd/MM/yyyy')}, das ${start} às ${end}`,
-    );
-    resetSelection();
+    setIsSubmitting(true);
+    try {
+      const dateStr = format(date, 'yyyy-MM-dd');
+      const { data, error } = await supabase.functions.invoke('conexa-booking', {
+        body: { roomId, date: dateStr, startTime: start, endTime: end },
+      });
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      toast.success(data?.message || 'Reserva confirmada!');
+      resetSelection();
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Erro ao confirmar reserva';
+      toast.error(msg);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleConfirmClick = () => {
@@ -86,7 +101,7 @@ export default function RoomBooking() {
   };
 
   const handleClose = (open: boolean) => {
-    if (!open) resetSelection();
+    if (!open && !isSubmitting) resetSelection();
   };
 
   return (
