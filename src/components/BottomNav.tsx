@@ -26,10 +26,8 @@ interface NavItem {
 
 const clientNavItems: NavItem[] = [
   { icon: Home, label: 'Início', href: '/' },
-  { icon: MessageSquare, label: 'Chamados', href: '/tickets' },
-  { icon: Bell, label: 'Avisos', href: '/announcements' },
+  { icon: MessageSquare, label: 'Mensagens', href: '/tickets' },
   { icon: CalendarCheck, label: 'Reservas', href: '/reserva-salas' },
-  { icon: BookOpen, label: 'Manual', href: '/manual' },
 ];
 
 const centralAtendimentoNavItems: NavItem[] = [
