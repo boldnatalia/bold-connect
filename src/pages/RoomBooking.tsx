@@ -225,11 +225,15 @@ export default function RoomBooking() {
 
             <Button
               onClick={handleConfirmClick}
-              disabled={!selectedDate || !startTime || !endTime}
+              disabled={!selectedDate || !startTime || !endTime || isSubmitting}
               className="w-full min-h-[48px] text-base font-semibold"
               size="lg"
             >
-              Confirmar Reserva
+              {isSubmitting ? (
+                <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Enviando...</>
+              ) : (
+                'Confirmar Reserva'
+              )}
             </Button>
           </div>
         </DialogContent>
