@@ -9,9 +9,7 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
-  }
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 
   try {
     const { roomId, date, startTime, endTime } = await req.json()
@@ -30,28 +28,50 @@ serve(async (req) => {
 
     if (!conexaToken) throw new Error("Token do Conexa não configurado.");
 
-    // Busca usuário no Conexa
-    const personUrl = `${CONEXA_BASE_URL}/persons?email=${userEmail}`;
-    console.log("Buscando usuário na URL:", personUrl);
+    // ==========================================
+    // BUSCA PAGINADA DE USUÁRIO (Workaround)
+    // ==========================================
+    let offset = 0;
+    const limit = 100;
+    let personId = null;
+    let customerId = null;
+    let userFound = false;
 
-    const personResponse = await fetch(personUrl, {
-      headers: { 'Authorization': `Bearer ${conexaToken}` }
-    });
+    while (!userFound) {
+      const url = `${CONEXA_BASE_URL}/persons?limit=${limit}&offset=${offset}&active=1`;
+      const response = await fetch(url, { headers: { 'Authorization': `Bearer ${conexaToken}` } });
 
-    if (!personResponse.ok) {
-        const errorText = await personResponse.text();
-        throw new Error(`Status: ${personResponse.status} | URL: ${personUrl} | Detalhes: ${errorText}`);
+      if (!response.ok) {
+          const err = await response.text();
+          throw new Error(`Erro ao listar pessoas: ${err}`);
+      }
+
+      const data = await response.json();
+      if (!data.data || data.data.length === 0) break;
+
+      // Procura o e-mail na página atual
+      for (const person of data.data) {
+        if (person.emails && person.emails.includes(userEmail)) {
+          personId = person.personId || person.id;
+          customerId = person.customerId;
+          userFound = true;
+          break;
+        }
+      }
+
+      if (userFound) break;
+      if (!data.pagination || !data.pagination.hasNext) break;
+
+      offset += limit;
     }
 
-    const personData = await personResponse.json();
-    if (!personData.data || personData.data.length === 0) {
-      throw new Error(`E-mail ${userEmail} não encontrado no Conexa.`);
+    if (!userFound || !personId || !customerId) {
+        throw new Error(`Seu e-mail (${userEmail}) não foi encontrado no sistema. Por favor, contate a portaria.`);
     }
 
-    const personId = personData.data[0].id;
-    const customerId = personData.data[0].customerId;
-
-    // Formata data e hora
+    // ==========================================
+    // CRIA A RESERVA
+    // ==========================================
     const startDateTime = `${date}T${startTime}:00-03:00`;
     const endDateTime = `${date}T${endTime}:00-03:00`;
 
@@ -73,12 +93,12 @@ serve(async (req) => {
     });
 
     if (!bookingResponse.ok) {
-      const errorDetails = await bookingResponse.json();
-      throw new Error(JSON.stringify(errorDetails));
+        const errorDetails = await bookingResponse.text();
+        throw new Error(`Erro na Reserva: ${errorDetails}`);
     }
 
     return new Response(
-      JSON.stringify({ success: true, message: "Reserva confirmada!" }),
+      JSON.stringify({ success: true, message: "Reserva confirmada no Conexa!" }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     )
 
