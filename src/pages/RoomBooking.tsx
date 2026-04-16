@@ -16,45 +16,75 @@ import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
 
 interface Room {
-  id: string;
+  id: number;
   name: string;
   capacity: number;
   floor: string;
-  description: string;
 }
 
-const MOCK_ROOMS: Room[] = [
-  { id: '1', name: 'Sala de Reunião A', capacity: 4, floor: '3º Andar', description: 'TV 50", quadro branco' },
-  { id: '2', name: 'Sala de Reunião B', capacity: 8, floor: '5º Andar', description: 'Videoconferência, projetor' },
-  { id: '3', name: 'Sala Executiva', capacity: 6, floor: '7º Andar', description: 'Ambiente premium, café incluso' },
-  { id: '4', name: 'Sala Criativa', capacity: 10, floor: '9º Andar', description: 'Lousa colaborativa, sofás' },
-  { id: '5', name: 'Auditório', capacity: 20, floor: '12º Andar', description: 'Sistema de som, palco' },
+const ROOMS: Room[] = [
+  { id: 2106, name: 'Sala de Reunião 1', capacity: 12, floor: '12º Andar' },
+  { id: 2108, name: 'Sala de Reunião 2', capacity: 4, floor: '12º Andar' },
+  { id: 2109, name: 'Sala de Reunião 3', capacity: 6, floor: '12º Andar' },
+  { id: 2226, name: 'Sala de Reunião 6', capacity: 4, floor: '3º Andar' },
+  { id: 2213, name: 'Sala Privativa 311', capacity: 4, floor: '3º Andar' },
 ];
 
-const TIME_SLOTS = ['09:00', '10:00', '11:00', '14:00', '15:00', '16:00', '17:00'];
+// Gera horários de 08:00 até 20:00 em intervalos de 30 minutos
+const generateTimeSlots = (): string[] => {
+  const slots: string[] = [];
+  for (let h = 8; h <= 20; h++) {
+    slots.push(`${String(h).padStart(2, '0')}:00`);
+    if (h < 20) slots.push(`${String(h).padStart(2, '0')}:30`);
+  }
+  return slots;
+};
+
+const TIME_SLOTS = generateTimeSlots();
+
+const toMinutes = (t: string) => {
+  const [h, m] = t.split(':').map(Number);
+  return h * 60 + m;
+};
 
 export default function RoomBooking() {
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
-  const [selectedTime, setSelectedTime] = useState<string | null>(null);
+  const [startTime, setStartTime] = useState<string | null>(null);
+  const [endTime, setEndTime] = useState<string | null>(null);
 
-  const handleConfirm = () => {
-    if (!selectedDate || !selectedTime) {
-      toast.error('Selecione data e horário');
+  const resetSelection = () => {
+    setSelectedRoom(null);
+    setStartTime(null);
+    setEndTime(null);
+  };
+
+  const handleConfirmReservation = (
+    roomId: number,
+    date: Date,
+    start: string,
+    end: string,
+  ) => {
+    toast.success(
+      `Preparando para enviar: Sala ${roomId}, Data ${format(date, 'dd/MM/yyyy')}, das ${start} às ${end}`,
+    );
+    resetSelection();
+  };
+
+  const handleConfirmClick = () => {
+    if (!selectedRoom || !selectedDate || !startTime || !endTime) {
+      toast.error('Selecione data, horário de início e fim');
       return;
     }
-    toast.success(
-      `Reserva confirmada: ${selectedRoom?.name} em ${format(selectedDate, "dd/MM/yyyy")} às ${selectedTime}`
-    );
-    setSelectedRoom(null);
-    setSelectedTime(null);
+    if (toMinutes(endTime) <= toMinutes(startTime)) {
+      toast.error('O horário de fim deve ser maior que o de início');
+      return;
+    }
+    handleConfirmReservation(selectedRoom.id, selectedDate, startTime, endTime);
   };
 
   const handleClose = (open: boolean) => {
-    if (!open) {
-      setSelectedRoom(null);
-      setSelectedTime(null);
-    }
+    if (!open) resetSelection();
   };
 
   return (
@@ -64,7 +94,7 @@ export default function RoomBooking() {
           Escolha uma sala para visualizar disponibilidade
         </p>
 
-        {MOCK_ROOMS.map((room) => (
+        {ROOMS.map((room) => (
           <Card
             key={room.id}
             onClick={() => setSelectedRoom(room)}
@@ -75,13 +105,10 @@ export default function RoomBooking() {
                 <h3 className="font-semibold text-base text-foreground truncate">
                   {room.name}
                 </h3>
-                <p className="text-xs text-muted-foreground mt-1 line-clamp-1">
-                  {room.description}
-                </p>
                 <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
                   <span className="flex items-center gap-1">
                     <Users className="h-3.5 w-3.5" />
-                    {room.capacity} lugares
+                    {room.capacity} pessoas
                   </span>
                   <span className="flex items-center gap-1">
                     <MapPin className="h-3.5 w-3.5" />
@@ -102,7 +129,7 @@ export default function RoomBooking() {
           <DialogHeader className="p-4 pb-2 text-left">
             <DialogTitle className="text-lg">{selectedRoom?.name}</DialogTitle>
             <p className="text-xs text-muted-foreground">
-              {selectedRoom?.floor} • {selectedRoom?.capacity} lugares
+              {selectedRoom?.floor} • {selectedRoom?.capacity} pessoas
             </p>
           </DialogHeader>
 
@@ -116,25 +143,30 @@ export default function RoomBooking() {
                   onSelect={setSelectedDate}
                   disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
                   locale={ptBR}
-                  className={cn("p-2 pointer-events-auto")}
+                  className={cn('p-2 pointer-events-auto')}
                 />
               </div>
             </div>
 
             <div>
               <p className="text-sm font-medium mb-2 flex items-center gap-1.5">
-                <Clock className="h-4 w-4" /> Horários disponíveis
+                <Clock className="h-4 w-4" /> Horário de início
               </p>
               <div className="flex flex-wrap gap-2">
-                {TIME_SLOTS.map((time) => (
+                {TIME_SLOTS.slice(0, -1).map((time) => (
                   <button
-                    key={time}
-                    onClick={() => setSelectedTime(time)}
+                    key={`start-${time}`}
+                    onClick={() => {
+                      setStartTime(time);
+                      if (endTime && toMinutes(endTime) <= toMinutes(time)) {
+                        setEndTime(null);
+                      }
+                    }}
                     className={cn(
-                      'px-4 py-2 rounded-full text-sm font-medium min-h-[40px] min-w-[72px] transition-all active:scale-95 border',
-                      selectedTime === time
+                      'px-3 py-2 rounded-full text-sm font-medium min-h-[40px] min-w-[64px] transition-all active:scale-95 border',
+                      startTime === time
                         ? 'bg-primary text-primary-foreground border-primary'
-                        : 'bg-background text-foreground border-border hover:border-primary'
+                        : 'bg-background text-foreground border-border hover:border-primary',
                     )}
                   >
                     {time}
@@ -143,9 +175,40 @@ export default function RoomBooking() {
               </div>
             </div>
 
+            <div>
+              <p className="text-sm font-medium mb-2 flex items-center gap-1.5">
+                <Clock className="h-4 w-4" /> Horário de fim
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {TIME_SLOTS.map((time) => {
+                  const disabled =
+                    !startTime || toMinutes(time) <= toMinutes(startTime);
+                  return (
+                    <button
+                      key={`end-${time}`}
+                      onClick={() => !disabled && setEndTime(time)}
+                      disabled={disabled}
+                      className={cn(
+                        'px-3 py-2 rounded-full text-sm font-medium min-h-[40px] min-w-[64px] transition-all active:scale-95 border',
+                        endTime === time
+                          ? 'bg-primary text-primary-foreground border-primary'
+                          : 'bg-background text-foreground border-border hover:border-primary',
+                        disabled && 'opacity-40 cursor-not-allowed active:scale-100',
+                      )}
+                    >
+                      {time}
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                Funcionamento: 08:00 às 20:00 (intervalos de 30 min)
+              </p>
+            </div>
+
             <Button
-              onClick={handleConfirm}
-              disabled={!selectedDate || !selectedTime}
+              onClick={handleConfirmClick}
+              disabled={!selectedDate || !startTime || !endTime}
               className="w-full min-h-[48px] text-base font-semibold"
               size="lg"
             >
