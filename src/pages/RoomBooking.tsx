@@ -114,39 +114,92 @@ export default function RoomBooking() {
 
   return (
     <AppLayout title="Reservar Sala">
-      <div className="px-4 py-4 space-y-3 max-w-lg mx-auto">
-        <p className="text-sm text-muted-foreground">
-          Escolha uma sala para visualizar disponibilidade
-        </p>
+      <div className="px-4 py-4 max-w-lg mx-auto">
+        <Tabs defaultValue="new" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 mb-4">
+            <TabsTrigger value="new" className="min-h-[40px]">Nova Reserva</TabsTrigger>
+            <TabsTrigger value="mine" className="min-h-[40px]">Minhas Reservas</TabsTrigger>
+          </TabsList>
 
-        {ROOMS.map((room) => (
-          <Card
-            key={room.id}
-            onClick={() => setSelectedRoom(room)}
-            className="p-4 cursor-pointer transition-all active:scale-[0.98] hover:border-primary min-h-[80px]"
-          >
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-base text-foreground truncate">
-                  {room.name}
-                </h3>
-                <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
-                  <span className="flex items-center gap-1">
-                    <Users className="h-3.5 w-3.5" />
-                    {room.capacity} pessoas
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <MapPin className="h-3.5 w-3.5" />
-                    {room.floor}
-                  </span>
+          <TabsContent value="new" className="space-y-3 mt-0">
+            <p className="text-sm text-muted-foreground">
+              Escolha uma sala para visualizar disponibilidade
+            </p>
+
+            {ROOMS.map((room) => (
+              <Card
+                key={room.id}
+                onClick={() => setSelectedRoom(room)}
+                className="p-4 cursor-pointer transition-all active:scale-[0.98] hover:border-primary min-h-[80px]"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-base text-foreground truncate">
+                      {room.name}
+                    </h3>
+                    <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <Users className="h-3.5 w-3.5" />
+                        {room.capacity} pessoas
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <MapPin className="h-3.5 w-3.5" />
+                        {room.floor}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                    <CalendarCheck className="h-5 w-5 text-primary" />
+                  </div>
                 </div>
+              </Card>
+            ))}
+          </TabsContent>
+
+          <TabsContent value="mine" className="space-y-3 mt-0">
+            {MOCK_BOOKINGS.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground">
+                <CalendarDays className="h-12 w-12 mx-auto mb-3 opacity-40" />
+                <p className="text-sm">Você ainda não tem reservas</p>
               </div>
-              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                <CalendarCheck className="h-5 w-5 text-primary" />
-              </div>
-            </div>
-          </Card>
-        ))}
+            ) : (
+              MOCK_BOOKINGS.map((b) => {
+                const dateLabel = format(new Date(`${b.date}T00:00:00`), "dd 'de' MMMM", { locale: ptBR });
+                return (
+                  <Card key={b.id} className="p-4 min-h-[80px]">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-base text-foreground truncate">
+                          {b.roomName}
+                        </h3>
+                        <p className="text-xs text-muted-foreground mt-0.5">{b.floor}</p>
+                        <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground flex-wrap">
+                          <span className="flex items-center gap-1">
+                            <CalendarDays className="h-3.5 w-3.5" />
+                            {dateLabel}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Clock className="h-3.5 w-3.5" />
+                            {b.startTime} - {b.endTime}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full mt-3 min-h-[40px] text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive"
+                      onClick={() => toast.info('Cancelamento será implementado em breve')}
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Cancelar Reserva
+                    </Button>
+                  </Card>
+                );
+              })
+            )}
+          </TabsContent>
+        </Tabs>
       </div>
 
       <Dialog open={!!selectedRoom} onOpenChange={handleClose}>
