@@ -72,24 +72,20 @@ serve(async (req) => {
     // ==========================================
     // CRIA A RESERVA
     // ==========================================
-    // Garante que a data está no formato YYYY-MM-DD
+    // Formata a data para YYYY-MM-DD
     const formattedDate = new Date(date).toISOString().split('T')[0];
 
-    // O Conexa exige formato W3C com timezone, ex: 2026-04-20T09:00:00-03:00
-    // Assumindo fuso horário do Brasil (-03:00) para este MVP
-    // Garante que o horário tem exatamente 5 caracteres (ex: "09:00") e adiciona os segundos
+    // Garante que o horário tem exatamente 5 caracteres (ex: "09:30")
     const safeStartTime = startTime.length > 5 ? startTime.substring(0, 5) : startTime;
     const safeEndTime = endTime.length > 5 ? endTime.substring(0, 5) : endTime;
-    const startDateTime = `${formattedDate} ${safeStartTime}:00`;
-    const endDateTime = `${formattedDate} ${safeEndTime}:00`;
 
     const bookingPayload = {
       customerId: customerId,
       personId: personId,
       roomId: roomId,
-      date: formattedDate, // Adicionado campo date isolado
-      startTime: startDateTime,
-      finalTime: endDateTime,
+      date: formattedDate,
+      startTime: safeStartTime, // Envia APENAS "09:30"
+      finalTime: safeEndTime,   // Envia APENAS "10:30"
     };
 
     console.log("Payload a enviar para reserva:", bookingPayload);
