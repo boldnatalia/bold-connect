@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { AppLayout } from '@/components/AppLayout';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   Dialog,
   DialogContent,
@@ -33,12 +34,69 @@ const ROOMS: Room[] = [
   { id: 2213, name: 'Sala Privativa 311', capacity: 4, floor: '3º Andar' },
 ];
 
-// Mock estático para a aba "Minhas Reservas" (visual apenas)
-const MOCK_BOOKINGS = [
-  { id: 'm1', roomName: 'Sala de Reunião 1', floor: '12º Andar', date: '2026-04-20', startTime: '09:00', endTime: '10:00' },
-  { id: 'm2', roomName: 'Sala Privativa 311', floor: '3º Andar', date: '2026-04-22', startTime: '14:30', endTime: '15:30' },
-  { id: 'm3', roomName: 'Sala de Reunião 3', floor: '12º Andar', date: '2026-04-25', startTime: '11:00', endTime: '12:00' },
-];
+// Mapa de roomId -> info para exibição amigável das reservas vindas do Conexa
+const ROOM_INFO_MAP: Record<number, { name: string; floor: string }> = {
+  2106: { name: 'Sala de Reunião 1', floor: '12º Andar' },
+  2108: { name: 'Sala de Reunião 2', floor: '12º Andar' },
+  2109: { name: 'Sala de Reunião 3', floor: '12º Andar' },
+  2226: { name: 'Sala de Reunião 6', floor: '3º Andar' },
+  2213: { name: 'Sala Privativa 311', floor: '3º Andar' },
+};
+
+interface ConexaBooking {
+  id?: number | string;
+  bookingId?: number | string;
+  roomId?: number;
+  date?: string;
+  startTime?: string;
+  finalTime?: string;
+  endTime?: string;
+  bookingDateTime?: string;
+  bookingFinalDateTime?: string;
+  roomName?: string;
+}
+
+interface ParsedBooking {
+  id: string;
+  roomName: string;
+  floor: string;
+  date: string; // YYYY-MM-DD
+  startTime: string; // HH:mm
+  endTime: string; // HH:mm
+}
+
+const extractTime = (val?: string): string => {
+  if (!val) return '';
+  // Aceita "HH:mm", "HH:mm:ss", "YYYY-MM-DD HH:mm:ss", ISO
+  const match = val.match(/(\d{2}):(\d{2})/);
+  return match ? `${match[1]}:${match[2]}` : '';
+};
+
+const extractDate = (val?: string): string => {
+  if (!val) return '';
+  const match = val.match(/(\d{4}-\d{2}-\d{2})/);
+  return match ? match[1] : '';
+};
+
+const parseBooking = (b: ConexaBooking, idx: number): ParsedBooking => {
+  const roomId = b.roomId ?? 0;
+  const info = ROOM_INFO_MAP[roomId];
+  const date = extractDate(b.date) || extractDate(b.bookingDateTime);
+  const startTime =
+    extractTime(b.startTime) || extractTime(b.bookingDateTime);
+  const endTime =
+    extractTime(b.finalTime) ||
+    extractTime(b.endTime) ||
+    extractTime(b.bookingFinalDateTime);
+  return {
+    id: String(b.bookingId ?? b.id ?? `b-${idx}`),
+    roomName: info?.name || b.roomName || `Sala #${roomId}`,
+    floor: info?.floor || '',
+    date,
+    startTime,
+    endTime,
+  };
+};
 
 // Gera horários de 08:00 até 20:00 em intervalos de 30 minutos
 const generateTimeSlots = (): string[] => {
@@ -63,6 +121,31 @@ export default function RoomBooking() {
   const [startTime, setStartTime] = useState<string | null>(null);
   const [endTime, setEndTime] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [bookings, setBookings] = useState<ParsedBooking[]>([]);
+  const [bookingsLoading, setBookingsLoading] = useState(true);
+  const [bookingsError, setBookingsError] = useState<string | null>(null);
+
+  const fetchBookings = async () => {
+    setBookingsLoading(true);
+    setBookingsError(null);
+    try {
+      const { data, error } = await supabase.functions.invoke('conexa-get-bookings');
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      const list = Array.isArray(data?.bookings) ? data.bookings : [];
+      setBookings(list.map((b: ConexaBooking, i: number) => parseBooking(b, i)));
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Erro ao carregar reservas';
+      setBookingsError(msg);
+      setBookings([]);
+    } finally {
+      setBookingsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchBookings();
+  }, []);
 
   const resetSelection = () => {
     setSelectedRoom(null);
@@ -157,14 +240,34 @@ export default function RoomBooking() {
           </TabsContent>
 
           <TabsContent value="mine" className="space-y-3 mt-0">
-            {MOCK_BOOKINGS.length === 0 ? (
+            {bookingsLoading ? (
+              <>
+                {[1, 2, 3].map((i) => (
+                  <Card key={i} className="p-4 min-h-[80px]">
+                    <Skeleton className="h-4 w-2/3 mb-2" />
+                    <Skeleton className="h-3 w-1/3 mb-3" />
+                    <Skeleton className="h-3 w-1/2" />
+                  </Card>
+                ))}
+              </>
+            ) : bookingsError ? (
+              <div className="text-center py-12 text-muted-foreground">
+                <CalendarDays className="h-12 w-12 mx-auto mb-3 opacity-40" />
+                <p className="text-sm mb-3">{bookingsError}</p>
+                <Button variant="outline" size="sm" onClick={fetchBookings} className="min-h-[40px]">
+                  Tentar novamente
+                </Button>
+              </div>
+            ) : bookings.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">
                 <CalendarDays className="h-12 w-12 mx-auto mb-3 opacity-40" />
                 <p className="text-sm">Você ainda não tem reservas</p>
               </div>
             ) : (
-              MOCK_BOOKINGS.map((b) => {
-                const dateLabel = format(new Date(`${b.date}T00:00:00`), "dd 'de' MMMM", { locale: ptBR });
+              bookings.map((b) => {
+                const dateLabel = b.date
+                  ? format(new Date(`${b.date}T00:00:00`), "dd 'de' MMMM", { locale: ptBR })
+                  : 'Data indisponível';
                 return (
                   <Card key={b.id} className="p-4 min-h-[80px]">
                     <div className="flex items-start justify-between gap-3">
