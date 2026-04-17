@@ -71,6 +71,13 @@ serve(async (req) => {
 
     const bookingsData = await bookingsResponse.json();
 
+    // LOG do primeiro booking pra ajudar a mapear o frontend
+    if (bookingsData.data && bookingsData.data.length > 0) {
+      console.log("Exemplo de booking retornado:", JSON.stringify(bookingsData.data[0], null, 2));
+    } else {
+      console.log("Nenhuma reserva retornada. Resposta completa:", JSON.stringify(bookingsData));
+    }
+
     return new Response(
       JSON.stringify({ success: true, bookings: bookingsData.data || [] }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
