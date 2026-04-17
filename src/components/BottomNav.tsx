@@ -10,6 +10,7 @@ import {
   CalendarCheck,
   UtensilsCrossed,
   Users,
+  User,
   FileText,
   Settings,
   LogOut,
