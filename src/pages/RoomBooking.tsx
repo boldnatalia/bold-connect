@@ -167,6 +167,12 @@ export default function RoomBooking() {
     }
   };
 
+  const handleCancel = (bookingId: string) => {
+    // ID disponível para o próximo passo (criar edge function de cancelamento)
+    console.log('[cancel] booking id:', bookingId);
+    toast.info(`Cancelamento será implementado em breve (ID: ${bookingId})`);
+  };
+
   useEffect(() => {
     fetchBookings();
   }, []);
@@ -292,6 +298,9 @@ export default function RoomBooking() {
                 const dateLabel = b.date
                   ? format(new Date(`${b.date}T00:00:00`), "dd 'de' MMMM", { locale: ptBR })
                   : 'Data indisponível';
+                const timeLabel = b.startTime && b.endTime
+                  ? `${b.startTime} - ${b.endTime}`
+                  : b.startTime || b.endTime || 'Horário indisponível';
                 return (
                   <Card key={b.id} className="p-4 min-h-[80px]">
                     <div className="flex items-start justify-between gap-3">
@@ -299,7 +308,9 @@ export default function RoomBooking() {
                         <h3 className="font-semibold text-base text-foreground truncate">
                           {b.roomName}
                         </h3>
-                        <p className="text-xs text-muted-foreground mt-0.5">{b.floor}</p>
+                        {b.floor && (
+                          <p className="text-xs text-muted-foreground mt-0.5">{b.floor}</p>
+                        )}
                         <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground flex-wrap">
                           <span className="flex items-center gap-1">
                             <CalendarDays className="h-3.5 w-3.5" />
@@ -307,7 +318,7 @@ export default function RoomBooking() {
                           </span>
                           <span className="flex items-center gap-1">
                             <Clock className="h-3.5 w-3.5" />
-                            {b.startTime} - {b.endTime}
+                            {timeLabel}
                           </span>
                         </div>
                       </div>
@@ -316,7 +327,7 @@ export default function RoomBooking() {
                       variant="outline"
                       size="sm"
                       className="w-full mt-3 min-h-[40px] text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive"
-                      onClick={() => toast.info('Cancelamento será implementado em breve')}
+                      onClick={() => handleCancel(b.id)}
                     >
                       <Trash2 className="h-4 w-4 mr-2" />
                       Cancelar Reserva
