@@ -10,6 +10,7 @@ import {
   CalendarCheck,
   UtensilsCrossed,
   Users,
+  User,
   FileText,
   Settings,
   LogOut,
@@ -28,6 +29,7 @@ const clientNavItems: NavItem[] = [
   { icon: Home, label: 'Início', href: '/' },
   { icon: MessageSquare, label: 'Mensagens', href: '/tickets' },
   { icon: CalendarCheck, label: 'Reservas', href: '/reserva-salas' },
+  { icon: User, label: 'Perfil', href: '/profile' },
 ];
 
 const centralAtendimentoNavItems: NavItem[] = [
