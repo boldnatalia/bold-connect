@@ -33,6 +33,13 @@ const ROOMS: Room[] = [
   { id: 2213, name: 'Sala Privativa 311', capacity: 4, floor: '3º Andar' },
 ];
 
+// Mock estático para a aba "Minhas Reservas" (visual apenas)
+const MOCK_BOOKINGS = [
+  { id: 'm1', roomName: 'Sala de Reunião 1', floor: '12º Andar', date: '2026-04-20', startTime: '09:00', endTime: '10:00' },
+  { id: 'm2', roomName: 'Sala Privativa 311', floor: '3º Andar', date: '2026-04-22', startTime: '14:30', endTime: '15:30' },
+  { id: 'm3', roomName: 'Sala de Reunião 3', floor: '12º Andar', date: '2026-04-25', startTime: '11:00', endTime: '12:00' },
+];
+
 // Gera horários de 08:00 até 20:00 em intervalos de 30 minutos
 const generateTimeSlots = (): string[] => {
   const slots: string[] = [];
