@@ -34,14 +34,6 @@ const ROOMS: Room[] = [
   { id: 2213, name: 'Sala Privativa 311', capacity: 4, floor: '3º Andar' },
 ];
 
-// Mapa de roomId -> info para exibição amigável das reservas vindas do Conexa
-const ROOM_INFO_MAP: Record<number, { name: string; floor: string }> = {
-  2106: { name: 'Sala de Reunião 1', floor: '12º Andar' },
-  2108: { name: 'Sala de Reunião 2', floor: '12º Andar' },
-  2109: { name: 'Sala de Reunião 3', floor: '12º Andar' },
-  2226: { name: 'Sala de Reunião 6', floor: '3º Andar' },
-  2213: { name: 'Sala Privativa 311', floor: '3º Andar' },
-};
 
 // Mapa de roomId -> nome amigável
 const roomNames: Record<number, string> = {
@@ -163,6 +155,8 @@ export default function RoomBooking() {
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       const list = Array.isArray(data?.bookings) ? data.bookings : [];
+      // Debug: ajuda a identificar nomes de campos retornados pelo Conexa
+      console.log('[conexa-get-bookings] raw bookings:', list);
       setBookings(list.map((b: ConexaBooking, i: number) => parseBooking(b, i)));
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Erro ao carregar reservas';
