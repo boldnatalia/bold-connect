@@ -34,40 +34,58 @@ const ROOMS: Room[] = [
   { id: 2213, name: 'Sala Privativa 311', capacity: 4, floor: '3º Andar' },
 ];
 
-// Mapa de roomId -> info para exibição amigável das reservas vindas do Conexa
-const ROOM_INFO_MAP: Record<number, { name: string; floor: string }> = {
-  2106: { name: 'Sala de Reunião 1', floor: '12º Andar' },
-  2108: { name: 'Sala de Reunião 2', floor: '12º Andar' },
-  2109: { name: 'Sala de Reunião 3', floor: '12º Andar' },
-  2226: { name: 'Sala de Reunião 6', floor: '3º Andar' },
-  2213: { name: 'Sala Privativa 311', floor: '3º Andar' },
+
+// Mapa de roomId -> nome amigável
+const roomNames: Record<number, string> = {
+  2106: 'Sala de Reunião 1',
+  2108: 'Sala de Reunião 2',
+  2109: 'Sala de Reunião 3',
+  2226: 'Sala de Reunião 6',
+  2213: 'Sala Privativa 311',
 };
 
-interface ConexaBooking {
-  id?: number | string;
-  bookingId?: number | string;
-  roomId?: number;
-  date?: string;
-  startTime?: string;
-  finalTime?: string;
-  endTime?: string;
-  bookingDateTime?: string;
-  bookingFinalDateTime?: string;
-  roomName?: string;
-}
+const roomFloors: Record<number, string> = {
+  2106: '12º Andar',
+  2108: '12º Andar',
+  2109: '12º Andar',
+  2226: '3º Andar',
+  2213: '3º Andar',
+};
+
+// Booking do Conexa — campos variam, então aceitamos várias chaves possíveis
+type ConexaBooking = Record<string, unknown>;
 
 interface ParsedBooking {
   id: string;
+  roomId: number;
   roomName: string;
   floor: string;
   date: string; // YYYY-MM-DD
   startTime: string; // HH:mm
   endTime: string; // HH:mm
+  rawDateLabel?: string;
 }
+
+const pick = (obj: Record<string, unknown>, keys: string[]): string => {
+  for (const k of keys) {
+    const v = obj[k];
+    if (typeof v === 'string' && v.length > 0) return v;
+    if (typeof v === 'number') return String(v);
+  }
+  return '';
+};
+
+const pickNumber = (obj: Record<string, unknown>, keys: string[]): number => {
+  for (const k of keys) {
+    const v = obj[k];
+    if (typeof v === 'number') return v;
+    if (typeof v === 'string' && v && !isNaN(Number(v))) return Number(v);
+  }
+  return 0;
+};
 
 const extractTime = (val?: string): string => {
   if (!val) return '';
-  // Aceita "HH:mm", "HH:mm:ss", "YYYY-MM-DD HH:mm:ss", ISO
   const match = val.match(/(\d{2}):(\d{2})/);
   return match ? `${match[1]}:${match[2]}` : '';
 };
@@ -79,22 +97,26 @@ const extractDate = (val?: string): string => {
 };
 
 const parseBooking = (b: ConexaBooking, idx: number): ParsedBooking => {
-  const roomId = b.roomId ?? 0;
-  const info = ROOM_INFO_MAP[roomId];
-  const date = extractDate(b.date) || extractDate(b.bookingDateTime);
-  const startTime =
-    extractTime(b.startTime) || extractTime(b.bookingDateTime);
-  const endTime =
-    extractTime(b.finalTime) ||
-    extractTime(b.endTime) ||
-    extractTime(b.bookingFinalDateTime);
+  const roomId = pickNumber(b, ['roomId', 'roomsId', 'room_id']);
+
+  const startRaw = pick(b, [
+    'startTime', 'bookingDateTime', 'bookingDateTimeFrom', 'startDateTime', 'dateTimeFrom',
+  ]);
+  const endRaw = pick(b, [
+    'finalTime', 'endTime', 'bookingFinalDateTime', 'bookingDateTimeTo', 'endDateTime', 'dateTimeTo',
+  ]);
+  const dateRaw = pick(b, ['date', 'bookingDate']) || startRaw;
+
+  const id = pick(b, ['bookingId', 'id', 'roomBookingId']) || `b-${idx}`;
+
   return {
-    id: String(b.bookingId ?? b.id ?? `b-${idx}`),
-    roomName: info?.name || b.roomName || `Sala #${roomId}`,
-    floor: info?.floor || '',
-    date,
-    startTime,
-    endTime,
+    id,
+    roomId,
+    roomName: roomNames[roomId] || `Sala ${roomId || '—'}`,
+    floor: roomFloors[roomId] || '',
+    date: extractDate(dateRaw),
+    startTime: extractTime(startRaw),
+    endTime: extractTime(endRaw),
   };
 };
 
@@ -133,6 +155,8 @@ export default function RoomBooking() {
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       const list = Array.isArray(data?.bookings) ? data.bookings : [];
+      // Debug: ajuda a identificar nomes de campos retornados pelo Conexa
+      console.log('[conexa-get-bookings] raw bookings:', list);
       setBookings(list.map((b: ConexaBooking, i: number) => parseBooking(b, i)));
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Erro ao carregar reservas';
@@ -141,6 +165,12 @@ export default function RoomBooking() {
     } finally {
       setBookingsLoading(false);
     }
+  };
+
+  const handleCancel = (bookingId: string) => {
+    // ID disponível para o próximo passo (criar edge function de cancelamento)
+    console.log('[cancel] booking id:', bookingId);
+    toast.info(`Cancelamento será implementado em breve (ID: ${bookingId})`);
   };
 
   useEffect(() => {
@@ -268,6 +298,9 @@ export default function RoomBooking() {
                 const dateLabel = b.date
                   ? format(new Date(`${b.date}T00:00:00`), "dd 'de' MMMM", { locale: ptBR })
                   : 'Data indisponível';
+                const timeLabel = b.startTime && b.endTime
+                  ? `${b.startTime} - ${b.endTime}`
+                  : b.startTime || b.endTime || 'Horário indisponível';
                 return (
                   <Card key={b.id} className="p-4 min-h-[80px]">
                     <div className="flex items-start justify-between gap-3">
@@ -275,7 +308,9 @@ export default function RoomBooking() {
                         <h3 className="font-semibold text-base text-foreground truncate">
                           {b.roomName}
                         </h3>
-                        <p className="text-xs text-muted-foreground mt-0.5">{b.floor}</p>
+                        {b.floor && (
+                          <p className="text-xs text-muted-foreground mt-0.5">{b.floor}</p>
+                        )}
                         <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground flex-wrap">
                           <span className="flex items-center gap-1">
                             <CalendarDays className="h-3.5 w-3.5" />
@@ -283,7 +318,7 @@ export default function RoomBooking() {
                           </span>
                           <span className="flex items-center gap-1">
                             <Clock className="h-3.5 w-3.5" />
-                            {b.startTime} - {b.endTime}
+                            {timeLabel}
                           </span>
                         </div>
                       </div>
@@ -292,7 +327,7 @@ export default function RoomBooking() {
                       variant="outline"
                       size="sm"
                       className="w-full mt-3 min-h-[40px] text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive"
-                      onClick={() => toast.info('Cancelamento será implementado em breve')}
+                      onClick={() => handleCancel(b.id)}
                     >
                       <Trash2 className="h-4 w-4 mr-2" />
                       Cancelar Reserva
