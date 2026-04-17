@@ -77,8 +77,11 @@ serve(async (req) => {
 
     // O Conexa exige formato W3C com timezone, ex: 2026-04-20T09:00:00-03:00
     // Assumindo fuso horário do Brasil (-03:00) para este MVP
-    const startDateTime = `${formattedDate}T${startTime}:00-03:00`;
-    const endDateTime = `${formattedDate}T${endTime}:00-03:00`;
+    // Garante que o horário tem exatamente 5 caracteres (ex: "09:00") e adiciona os segundos
+    const safeStartTime = startTime.length > 5 ? startTime.substring(0, 5) : startTime;
+    const safeEndTime = endTime.length > 5 ? endTime.substring(0, 5) : endTime;
+    const startDateTime = `${formattedDate} ${safeStartTime}:00`;
+    const endDateTime = `${formattedDate} ${safeEndTime}:00`;
 
     const bookingPayload = {
       customerId: customerId,
