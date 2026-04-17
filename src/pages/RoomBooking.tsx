@@ -43,31 +43,57 @@ const ROOM_INFO_MAP: Record<number, { name: string; floor: string }> = {
   2213: { name: 'Sala Privativa 311', floor: '3º Andar' },
 };
 
-interface ConexaBooking {
-  id?: number | string;
-  bookingId?: number | string;
-  roomId?: number;
-  date?: string;
-  startTime?: string;
-  finalTime?: string;
-  endTime?: string;
-  bookingDateTime?: string;
-  bookingFinalDateTime?: string;
-  roomName?: string;
-}
+// Mapa de roomId -> nome amigável
+const roomNames: Record<number, string> = {
+  2106: 'Sala de Reunião 1',
+  2108: 'Sala de Reunião 2',
+  2109: 'Sala de Reunião 3',
+  2226: 'Sala de Reunião 6',
+  2213: 'Sala Privativa 311',
+};
+
+const roomFloors: Record<number, string> = {
+  2106: '12º Andar',
+  2108: '12º Andar',
+  2109: '12º Andar',
+  2226: '3º Andar',
+  2213: '3º Andar',
+};
+
+// Booking do Conexa — campos variam, então aceitamos várias chaves possíveis
+type ConexaBooking = Record<string, unknown>;
 
 interface ParsedBooking {
   id: string;
+  roomId: number;
   roomName: string;
   floor: string;
   date: string; // YYYY-MM-DD
   startTime: string; // HH:mm
   endTime: string; // HH:mm
+  rawDateLabel?: string;
 }
+
+const pick = (obj: Record<string, unknown>, keys: string[]): string => {
+  for (const k of keys) {
+    const v = obj[k];
+    if (typeof v === 'string' && v.length > 0) return v;
+    if (typeof v === 'number') return String(v);
+  }
+  return '';
+};
+
+const pickNumber = (obj: Record<string, unknown>, keys: string[]): number => {
+  for (const k of keys) {
+    const v = obj[k];
+    if (typeof v === 'number') return v;
+    if (typeof v === 'string' && v && !isNaN(Number(v))) return Number(v);
+  }
+  return 0;
+};
 
 const extractTime = (val?: string): string => {
   if (!val) return '';
-  // Aceita "HH:mm", "HH:mm:ss", "YYYY-MM-DD HH:mm:ss", ISO
   const match = val.match(/(\d{2}):(\d{2})/);
   return match ? `${match[1]}:${match[2]}` : '';
 };
@@ -79,22 +105,26 @@ const extractDate = (val?: string): string => {
 };
 
 const parseBooking = (b: ConexaBooking, idx: number): ParsedBooking => {
-  const roomId = b.roomId ?? 0;
-  const info = ROOM_INFO_MAP[roomId];
-  const date = extractDate(b.date) || extractDate(b.bookingDateTime);
-  const startTime =
-    extractTime(b.startTime) || extractTime(b.bookingDateTime);
-  const endTime =
-    extractTime(b.finalTime) ||
-    extractTime(b.endTime) ||
-    extractTime(b.bookingFinalDateTime);
+  const roomId = pickNumber(b, ['roomId', 'roomsId', 'room_id']);
+
+  const startRaw = pick(b, [
+    'startTime', 'bookingDateTime', 'bookingDateTimeFrom', 'startDateTime', 'dateTimeFrom',
+  ]);
+  const endRaw = pick(b, [
+    'finalTime', 'endTime', 'bookingFinalDateTime', 'bookingDateTimeTo', 'endDateTime', 'dateTimeTo',
+  ]);
+  const dateRaw = pick(b, ['date', 'bookingDate']) || startRaw;
+
+  const id = pick(b, ['bookingId', 'id', 'roomBookingId']) || `b-${idx}`;
+
   return {
-    id: String(b.bookingId ?? b.id ?? `b-${idx}`),
-    roomName: info?.name || b.roomName || `Sala #${roomId}`,
-    floor: info?.floor || '',
-    date,
-    startTime,
-    endTime,
+    id,
+    roomId,
+    roomName: roomNames[roomId] || `Sala ${roomId || '—'}`,
+    floor: roomFloors[roomId] || '',
+    date: extractDate(dateRaw),
+    startTime: extractTime(startRaw),
+    endTime: extractTime(endRaw),
   };
 };
 
