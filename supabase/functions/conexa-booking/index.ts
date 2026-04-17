@@ -72,22 +72,31 @@ serve(async (req) => {
     // ==========================================
     // CRIA A RESERVA
     // ==========================================
-    const startDateTime = `${date}T${startTime}:00-03:00`;
-    const endDateTime = `${date}T${endTime}:00-03:00`;
+    // Garante que a data está no formato YYYY-MM-DD
+    const formattedDate = new Date(date).toISOString().split('T')[0];
+
+    // O Conexa exige formato W3C com timezone, ex: 2026-04-20T09:00:00-03:00
+    // Assumindo fuso horário do Brasil (-03:00) para este MVP
+    const startDateTime = `${formattedDate}T${startTime}:00-03:00`;
+    const endDateTime = `${formattedDate}T${endTime}:00-03:00`;
 
     const bookingPayload = {
       customerId: customerId,
       personId: personId,
       roomId: roomId,
+      date: formattedDate, // Adicionado campo date isolado
       startTime: startDateTime,
       finalTime: endDateTime,
     };
+
+    console.log("Payload a enviar para reserva:", bookingPayload);
 
     const bookingResponse = await fetch(`${CONEXA_BASE_URL}/room/booking`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${conexaToken}`,
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
       },
       body: JSON.stringify(bookingPayload)
     });
