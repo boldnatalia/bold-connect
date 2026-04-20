@@ -97,7 +97,10 @@ const extractDate = (val?: string): string => {
 };
 
 const parseBooking = (b: ConexaBooking, idx: number): ParsedBooking => {
-  const roomId = pickNumber(b, ['roomId', 'roomsId', 'room_id']);
+  // Conexa V2 returns the room inside `place: { id, name }`
+  const place = (b.place ?? b.room) as { id?: number; name?: string } | undefined;
+  let roomId = pickNumber(b, ['roomId', 'roomsId', 'room_id']);
+  if (!roomId && place?.id) roomId = Number(place.id);
 
   const startRaw = pick(b, [
     'startTime', 'bookingDateTime', 'bookingDateTimeFrom', 'startDateTime', 'dateTimeFrom',
@@ -108,11 +111,12 @@ const parseBooking = (b: ConexaBooking, idx: number): ParsedBooking => {
   const dateRaw = pick(b, ['date', 'bookingDate']) || startRaw;
 
   const id = pick(b, ['bookingId', 'id', 'roomBookingId']) || `b-${idx}`;
+  const fallbackName = place?.name || `Sala ${roomId || '—'}`;
 
   return {
     id,
     roomId,
-    roomName: roomNames[roomId] || `Sala ${roomId || '—'}`,
+    roomName: roomNames[roomId] || fallbackName,
     floor: roomFloors[roomId] || '',
     date: extractDate(dateRaw),
     startTime: extractTime(startRaw),
@@ -152,10 +156,10 @@ export default function RoomBooking() {
     setBookingsError(null);
     try {
       const { data, error } = await supabase.functions.invoke('conexa-get-bookings');
+      console.log('Dados CRUS do Conexa:', data);
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       const list = Array.isArray(data?.bookings) ? data.bookings : [];
-      // Debug: ajuda a identificar nomes de campos retornados pelo Conexa
       console.log('[conexa-get-bookings] raw bookings:', list);
       setBookings(list.map((b: ConexaBooking, i: number) => parseBooking(b, i)));
     } catch (err) {
@@ -305,9 +309,12 @@ export default function RoomBooking() {
                   <Card key={b.id} className="p-4 min-h-[80px]">
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex-1 min-w-0">
-                        <pre className="text-[10px] overflow-auto max-h-40 bg-gray-100 p-2 rounded w-full">
-{JSON.stringify(b, null, 2)}
-                        </pre>
+                        <h3 className="font-semibold text-base text-foreground truncate">
+                          {b.roomName}
+                        </h3>
+                        {b.floor && (
+                          <p className="text-xs text-muted-foreground mt-0.5">{b.floor}</p>
+                        )}
                         <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground flex-wrap">
                           <span className="flex items-center gap-1">
                             <CalendarDays className="h-3.5 w-3.5" />
@@ -318,6 +325,9 @@ export default function RoomBooking() {
                             {timeLabel}
                           </span>
                         </div>
+                      </div>
+                      <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                        <CalendarCheck className="h-5 w-5 text-primary" />
                       </div>
                     </div>
                     <Button
