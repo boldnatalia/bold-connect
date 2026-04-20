@@ -2,17 +2,31 @@ import { AppLayout } from '@/components/AppLayout';
 import { useFloors } from '@/hooks/useFloors';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Building2, Loader2, MapPin, Star, AlertTriangle } from 'lucide-react';
+import { Building2, Loader2, Star, AlertTriangle } from 'lucide-react';
+import boldFacade from '@/assets/bold-facade.jpg';
 
 export default function Floors() {
   const { floors, isLoading } = useFloors();
 
   return (
     <AppLayout title="Andares">
-      <div className="p-4 space-y-4 max-w-lg mx-auto animate-fade-in">
-        <p className="text-sm text-muted-foreground text-center">
-          Conheça os espaços do Bold Workplace
-        </p>
+      <div className="max-w-lg mx-auto animate-fade-in">
+        {/* Hero com fachada */}
+        <div className="relative w-full h-[220px] overflow-hidden">
+          <img
+            src={boldFacade}
+            alt="Fachada do Edifício Bold Workplace"
+            className="w-full h-full object-cover"
+            loading="eager"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
+          <div className="absolute bottom-3 left-4 right-4">
+            <h1 className="text-2xl font-bold text-white drop-shadow-md">Edifício Bold</h1>
+            <p className="text-xs text-white/90 drop-shadow">Conheça nossos pavimentos</p>
+          </div>
+        </div>
+
+        <div className="p-4 space-y-4">
 
         {isLoading ? (
           <div className="flex justify-center py-12">
@@ -74,6 +88,7 @@ export default function Floors() {
             ))}
           </div>
         )}
+        </div>
       </div>
     </AppLayout>
   );
