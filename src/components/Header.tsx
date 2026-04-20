@@ -19,12 +19,16 @@ interface HeaderProps {
 
 export function Header({ title, showBack, rightAction }: HeaderProps) {
   const navigate = useNavigate();
-  const { profile, signOut, isAdmin } = useAuth();
+  const { profile, user, signOut, isAdmin } = useAuth();
 
   const handleSignOut = async () => {
     await signOut();
     navigate('/login');
   };
+
+  const meta = user?.user_metadata as { full_name?: string; name?: string } | undefined;
+  const displayName =
+    profile?.full_name || meta?.full_name || meta?.name || user?.email?.split('@')[0] || '';
 
   const getInitials = (name: string) => {
     return name
@@ -68,17 +72,20 @@ export function Header({ title, showBack, rightAction }: HeaderProps) {
               <Button variant="ghost" size="icon" className="rounded-full">
                 <Avatar className="h-8 w-8">
                   <AvatarFallback className="bg-primary/10 text-primary text-xs font-medium">
-                    {profile ? getInitials(profile.full_name) : <User className="h-4 w-4" />}
+                    {displayName ? getInitials(displayName) : <User className="h-4 w-4" />}
                   </AvatarFallback>
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
-              {profile ? (
+              {user ? (
                 <>
                   <div className="px-2 py-1.5">
-                    <p className="text-sm font-medium">{profile.full_name}</p>
-                    <p className="text-xs text-muted-foreground">{profile.company}</p>
+                    <p className="text-sm font-medium">{displayName || 'Bem-vindo'}</p>
+                    <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                    {profile?.company && (
+                      <p className="text-xs text-muted-foreground">{profile.company}</p>
+                    )}
                     {isAdmin && (
                       <span className="inline-block mt-1 text-[10px] font-medium px-1.5 py-0.5 rounded bg-primary/10 text-primary">
                         Administrador
@@ -94,7 +101,7 @@ export function Header({ title, showBack, rightAction }: HeaderProps) {
                 </>
               ) : (
                 <div className="px-2 py-1.5">
-                  <p className="text-sm text-muted-foreground">Carregando perfil...</p>
+                  <p className="text-sm text-muted-foreground">Carregando...</p>
                 </div>
               )}
               <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
