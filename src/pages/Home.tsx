@@ -51,12 +51,6 @@ export default function Home() {
             </p>
           )}
         </div>
-          {(profile?.company || profile?.room) && (
-            <p className="text-sm text-muted-foreground">
-              {profile?.company}{profile?.room ? ` • Sala ${profile.room}` : ''}
-            </p>
-          )}
-        </div>
 
         {/* Reception Notifications */}
         <ClientNotifications />
