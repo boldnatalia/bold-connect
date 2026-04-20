@@ -34,7 +34,6 @@ export default function Home() {
     { icon: MessageSquare, label: 'Abrir Chamado', href: '/tickets/new', color: 'bg-info/10 text-info' },
     { icon: Bell, label: 'Ver Avisos', href: '/announcements', color: 'bg-warning/10 text-warning' },
     { icon: Building2, label: 'Andares', href: '/floors', color: 'bg-primary/10 text-primary' },
-    { icon: DoorOpen, label: 'Salas de Reunião', href: '/meeting-rooms', color: 'bg-success/10 text-success' },
   ];
 
   return (
@@ -53,7 +52,7 @@ export default function Home() {
         <ClientNotifications />
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-4 gap-3">
+        <div className="grid grid-cols-3 gap-3">
           {quickActions.map((action) => {
             const Icon = action.icon;
             return (
