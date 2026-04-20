@@ -13,7 +13,7 @@ export function AppLayout({ children, title, showBack, rightAction }: AppLayoutP
   return (
     <div className="min-h-screen min-h-[100dvh] bg-background flex flex-col">
       <Header title={title} showBack={showBack} rightAction={rightAction} />
-      <main className="flex-1 pb-20 overflow-y-auto">
+      <main className="flex-1 pb-20 overflow-y-auto bg-inherit">
         {children}
       </main>
       <BottomNav />
