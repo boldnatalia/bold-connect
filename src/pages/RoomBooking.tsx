@@ -171,10 +171,24 @@ export default function RoomBooking() {
     }
   };
 
-  const handleCancel = (bookingId: string) => {
-    // ID disponível para o próximo passo (criar edge function de cancelamento)
-    console.log('[cancel] booking id:', bookingId);
-    toast.info(`Cancelamento será implementado em breve (ID: ${bookingId})`);
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
+
+  const handleCancel = async (bookingId: string) => {
+    setCancellingId(bookingId);
+    try {
+      const { data, error } = await supabase.functions.invoke('conexa-cancel-booking', {
+        body: { bookingId },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast.success(data?.message || 'Reserva cancelada com sucesso!');
+      await fetchBookings();
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Erro ao cancelar reserva';
+      toast.error(msg);
+    } finally {
+      setCancellingId(null);
+    }
   };
 
   useEffect(() => {
