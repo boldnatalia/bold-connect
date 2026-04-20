@@ -116,7 +116,7 @@ const parseBooking = (b: ConexaBooking, idx: number): ParsedBooking => {
   return {
     id,
     roomId,
-    roomName: roomNames[roomId] || `Sala ${roomId || '—'}`,
+    roomName: roomNames[roomId] || fallbackName,
     floor: roomFloors[roomId] || '',
     date: extractDate(dateRaw),
     startTime: extractTime(startRaw),
