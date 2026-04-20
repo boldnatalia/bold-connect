@@ -88,6 +88,7 @@ export default function Floors() {
             ))}
           </div>
         )}
+        </div>
       </div>
     </AppLayout>
   );
