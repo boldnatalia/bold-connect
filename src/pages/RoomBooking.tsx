@@ -305,12 +305,9 @@ export default function RoomBooking() {
                   <Card key={b.id} className="p-4 min-h-[80px]">
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-base text-foreground truncate">
-                          {b.roomName}
-                        </h3>
-                        {b.floor && (
-                          <p className="text-xs text-muted-foreground mt-0.5">{b.floor}</p>
-                        )}
+                        <pre className="text-[10px] overflow-auto max-h-40 bg-gray-100 p-2 rounded w-full">
+{JSON.stringify(b, null, 2)}
+                        </pre>
                         <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground flex-wrap">
                           <span className="flex items-center gap-1">
                             <CalendarDays className="h-3.5 w-3.5" />
