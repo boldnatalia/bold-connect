@@ -14,6 +14,7 @@ import {
 import { Building2, Loader2, Star, AlertTriangle, Images } from 'lucide-react';
 import boldFacade from '@/assets/bold-facade.jpg';
 import floor3Corridor from '@/assets/floor-3-corridor.jpg';
+import floor3Corridor2 from '@/assets/floor-3-corridor-2.jpg';
 
 // Tags que recebem destaque dourado da marca Bold
 const HIGHLIGHT_TAGS = new Set(['Em Obras', 'Premium']);
@@ -21,6 +22,7 @@ const HIGHLIGHT_TAGS = new Set(['Em Obras', 'Premium']);
 const FLOOR_GALLERIES: Record<number, { src: string; alt: string }[]> = {
   3: [
     { src: floor3Corridor, alt: 'Corredor com divisórias de vidro e área de recepção do 3º andar' },
+    { src: floor3Corridor2, alt: 'Corredor do 3º andar com salas privativas e área de espera' },
   ],
 };
 
