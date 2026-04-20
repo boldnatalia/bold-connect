@@ -8,6 +8,8 @@ interface AuthContextType {
   session: Session | null;
   profile: Profile | null;
   role: AppRole | null;
+  conexaName: string | null;
+  displayName: string;
   isAdmin: boolean;
   isCentralAtendimento: boolean;
   isRecepcao: boolean;
@@ -26,6 +28,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [role, setRole] = useState<AppRole | null>(null);
+  const [conexaName, setConexaName] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchProfile = async (userId: string) => {
@@ -52,9 +55,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const fetchConexaName = async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke('conexa-get-user');
+      if (error) {
+        console.warn('[Conexa] erro ao buscar nome:', error.message);
+        return;
+      }
+      if (data?.name) {
+        setConexaName(data.name as string);
+      }
+    } catch (err) {
+      console.warn('[Conexa] falha ao invocar função:', err);
+    }
+  };
+
   const refreshProfile = async () => {
     if (user) {
-      await Promise.all([fetchProfile(user.id), fetchRole(user.id)]);
+      await Promise.all([fetchProfile(user.id), fetchRole(user.id), fetchConexaName()]);
     }
   };
 
@@ -71,12 +89,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             await Promise.all([
               fetchProfile(session.user.id),
               fetchRole(session.user.id),
+              fetchConexaName(),
             ]);
             setIsLoading(false);
           }, 0);
         } else {
           setProfile(null);
           setRole(null);
+          setConexaName(null);
           setIsLoading(false);
         }
       }
@@ -91,6 +111,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         Promise.all([
           fetchProfile(session.user.id),
           fetchRole(session.user.id),
+          fetchConexaName(),
         ]).finally(() => setIsLoading(false));
       } else {
         setIsLoading(false);
@@ -146,7 +167,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setSession(null);
     setProfile(null);
     setRole(null);
+    setConexaName(null);
   };
+
+  const meta = user?.user_metadata as { full_name?: string; name?: string } | undefined;
+  const displayName =
+    conexaName ||
+    profile?.full_name ||
+    meta?.full_name ||
+    meta?.name ||
+    'Usuário Bold';
 
   return (
     <AuthContext.Provider
@@ -155,6 +185,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         session,
         profile,
         role,
+        conexaName,
+        displayName,
         isAdmin: role === 'admin',
         isCentralAtendimento: role === 'central_atendimento' || role === 'admin',
         isRecepcao: role === 'recepcao',
