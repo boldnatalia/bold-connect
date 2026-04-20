@@ -16,7 +16,7 @@ import {
   LogOut,
   Send,
   History,
-  Headset
+  ConciergeBell
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -28,7 +28,7 @@ interface NavItem {
 
 const clientNavItems: NavItem[] = [
   { icon: Home, label: 'Início', href: '/' },
-  { icon: Headset, label: 'Chamados', href: '/tickets' },
+  { icon: ConciergeBell, label: 'Chamados', href: '/tickets' },
   { icon: CalendarCheck, label: 'Reservas', href: '/reserva-salas' },
   { icon: User, label: 'Perfil', href: '/profile' },
 ];
