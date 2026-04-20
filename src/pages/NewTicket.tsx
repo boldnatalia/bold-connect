@@ -53,6 +53,9 @@ export default function NewTicket() {
     }
 
     setIsLoading(true);
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    toast.info(`Conectado em: ${supabaseUrl}`);
+
     createTicket(
       { title: title.trim(), description: description.trim() },
       {
