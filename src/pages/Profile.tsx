@@ -97,7 +97,7 @@ export default function Profile() {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">CPF</p>
-                <p className="font-medium">{profile ? formatCPF(profile.cpf) : '-'}</p>
+                <p className="font-medium">{cpfToShow ? formatCPF(cpfToShow) : '-'}</p>
               </div>
             </div>
 
@@ -109,7 +109,7 @@ export default function Profile() {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Empresa</p>
-                <p className="font-medium">{profile?.company}</p>
+                <p className="font-medium">{companyToShow}</p>
               </div>
             </div>
 
