@@ -4,12 +4,30 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Building2, MapPin, Mail, CreditCard, Calendar } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Building2, MapPin, Mail, CreditCard, Calendar, LogOut } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
+import { useState } from 'react';
 
 export default function Profile() {
-  const { profile, user, isAdmin } = useAuth();
+  const { profile, user, isAdmin, signOut } = useAuth();
+  const navigate = useNavigate();
+  const [signingOut, setSigningOut] = useState(false);
+
+  const handleSignOut = async () => {
+    setSigningOut(true);
+    try {
+      await signOut();
+      toast.success('Sessão encerrada com sucesso');
+      navigate('/login', { replace: true });
+    } catch (err) {
+      toast.error('Erro ao encerrar a sessão');
+      setSigningOut(false);
+    }
+  };
 
   const getInitials = (name: string) => {
     return name
@@ -118,6 +136,17 @@ export default function Profile() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Logout */}
+        <Button
+          variant="outline"
+          className="w-full border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground active:scale-95 transition-transform"
+          onClick={handleSignOut}
+          disabled={signingOut}
+        >
+          <LogOut className="mr-2 h-4 w-4" />
+          {signingOut ? 'Saindo...' : 'Sair da Conta'}
+        </Button>
       </div>
     </AppLayout>
   );
