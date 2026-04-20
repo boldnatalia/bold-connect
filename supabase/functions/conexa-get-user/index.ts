@@ -71,6 +71,9 @@ serve(async (req) => {
         success: true,
         name: foundPerson.name ?? null,
         customerId: foundPerson.customerId ?? null,
+        cpf: foundPerson.cpf ?? foundPerson.document ?? null,
+        company: foundPerson.companyName ?? foundPerson.corporateName ?? foundPerson.company ?? null,
+        raw: foundPerson,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     )
