@@ -55,11 +55,17 @@ export function useTickets() {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('[useTickets] Erro ao criar chamado:', error);
+        throw error;
+      }
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tickets'] });
+    },
+    onError: (err) => {
+      console.error('[useTickets] createTicket falhou:', err);
     },
   });
 
