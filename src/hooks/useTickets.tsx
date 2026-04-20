@@ -20,16 +20,20 @@ export function useTickets() {
       }
 
       const { data, error } = await query;
-      if (error) throw error;
+      if (error) {
+        console.error('[useTickets] Erro ao buscar chamados:', error);
+        throw error;
+      }
       
       // Fetch profile data separately for each ticket
       const ticketsWithProfiles = await Promise.all(
         (data || []).map(async (ticket) => {
-          const { data: profileData } = await supabase
+          const { data: profileData, error: profileError } = await supabase
             .from('profiles')
             .select('full_name, company, room, floor:floors(name)')
             .eq('user_id', ticket.user_id)
             .single();
+          if (profileError) console.error('[useTickets] Erro ao buscar perfil:', profileError);
           
           return {
             ...ticket,
