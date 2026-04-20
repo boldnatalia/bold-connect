@@ -9,6 +9,8 @@ interface AuthContextType {
   profile: Profile | null;
   role: AppRole | null;
   conexaName: string | null;
+  conexaCpf: string | null;
+  conexaCompany: string | null;
   displayName: string;
   isAdmin: boolean;
   isCentralAtendimento: boolean;
@@ -29,6 +31,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [role, setRole] = useState<AppRole | null>(null);
   const [conexaName, setConexaName] = useState<string | null>(null);
+  const [conexaCpf, setConexaCpf] = useState<string | null>(null);
+  const [conexaCompany, setConexaCompany] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchProfile = async (userId: string) => {
@@ -62,9 +66,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.warn('[Conexa] erro ao buscar nome:', error.message);
         return;
       }
-      if (data?.name) {
-        setConexaName(data.name as string);
-      }
+      if (data?.name) setConexaName(data.name as string);
+      if (data?.cpf) setConexaCpf(String(data.cpf));
+      if (data?.company) setConexaCompany(String(data.company));
     } catch (err) {
       console.warn('[Conexa] falha ao invocar função:', err);
     }
@@ -168,6 +172,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setProfile(null);
     setRole(null);
     setConexaName(null);
+    setConexaCpf(null);
+    setConexaCompany(null);
   };
 
   const meta = user?.user_metadata as { full_name?: string; name?: string } | undefined;
@@ -194,6 +200,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         profile,
         role,
         conexaName,
+        conexaCpf,
+        conexaCompany,
         displayName,
         isAdmin: role === 'admin',
         isCentralAtendimento: role === 'central_atendimento' || role === 'admin',

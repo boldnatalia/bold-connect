@@ -13,7 +13,7 @@ import { toast } from 'sonner';
 import { useState } from 'react';
 
 export default function Profile() {
-  const { profile, user, isAdmin, displayName, signOut } = useAuth();
+  const { profile, user, isAdmin, displayName, conexaCpf, conexaCompany, signOut } = useAuth();
   const navigate = useNavigate();
   const [signingOut, setSigningOut] = useState(false);
 
@@ -39,8 +39,13 @@ export default function Profile() {
   };
 
   const formatCPF = (cpf: string) => {
-    return cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+    const digits = cpf.replace(/\D/g, '');
+    if (digits.length !== 11) return cpf;
+    return digits.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
   };
+
+  const cpfToShow = conexaCpf || profile?.cpf || '';
+  const companyToShow = conexaCompany || profile?.company || 'Bold Workplace';
 
   return (
     <AppLayout title="Meu Perfil" showBack>
@@ -92,7 +97,7 @@ export default function Profile() {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">CPF</p>
-                <p className="font-medium">{profile ? formatCPF(profile.cpf) : '-'}</p>
+                <p className="font-medium">{cpfToShow ? formatCPF(cpfToShow) : '-'}</p>
               </div>
             </div>
 
@@ -104,7 +109,7 @@ export default function Profile() {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Empresa</p>
-                <p className="font-medium">{profile?.company}</p>
+                <p className="font-medium">{companyToShow}</p>
               </div>
             </div>
 

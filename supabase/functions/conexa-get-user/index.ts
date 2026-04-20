@@ -35,7 +35,7 @@ serve(async (req) => {
 
     let offset = 0;
     const limit = 100;
-    let foundPerson: { name?: string; customerId?: string | number; emails?: string[] } | null = null;
+    let foundPerson: { name?: string; customerId?: string | number; emails?: string[]; cpf?: string; document?: string; companyName?: string; company?: string; corporateName?: string } | null = null;
 
     while (!foundPerson) {
       const url = `${CONEXA_BASE_URL}/persons?limit=${limit}&offset=${offset}&active=1`;
@@ -71,6 +71,9 @@ serve(async (req) => {
         success: true,
         name: foundPerson.name ?? null,
         customerId: foundPerson.customerId ?? null,
+        cpf: foundPerson.cpf ?? foundPerson.document ?? null,
+        company: foundPerson.companyName ?? foundPerson.corporateName ?? foundPerson.company ?? null,
+        raw: foundPerson,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     )
