@@ -115,7 +115,8 @@ export default function Home() {
 
   return (
     <AppLayout>
-      <div className="p-5 space-y-6 max-w-lg mx-auto animate-fade-in bg-[#F8F9FA] min-h-full">
+      <div className="bg-[#F8F9FA] min-h-full">
+      <div className="p-5 space-y-6 max-w-lg mx-auto animate-fade-in">
         {/* Saudação */}
         <div className="space-y-1">
           <p className="text-sm text-muted-foreground">Olá,</p>
