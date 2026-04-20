@@ -8,33 +8,20 @@ import { supabase } from '@/integrations/supabase/client';
 import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from '@/components/ui/dialog';
 import {
   MessageSquare,
   Clock,
   ChevronRight,
-  AlertCircle,
   CalendarCheck,
-  Wifi,
-  Copy,
-  Check,
   MapPin,
+  Megaphone,
+  Building2,
+  BookOpen,
 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { TICKET_STATUS_LABELS } from '@/types';
-import { toast } from 'sonner';
-
-const WIFI_NETWORK = 'Bold Workplace';
-const WIFI_PASSWORD = 'bold@2024';
 
 interface NextBooking {
   id: string;
@@ -76,12 +63,11 @@ export default function Home() {
   const { tickets } = useTickets();
   const { announcements } = useAnnouncements();
   const [nextBooking, setNextBooking] = useState<NextBooking | null>(null);
-  const [wifiOpen, setWifiOpen] = useState(false);
-  const [copied, setCopied] = useState<'net' | 'pass' | null>(null);
 
   const firstName = displayName ? displayName.split(' ')[0] : 'Usuário Bold';
   const pendingTickets = tickets.filter((t) => t.status === 'pending');
-  const recentAnnouncements = announcements.filter((a) => a.is_active).slice(0, 3);
+  const activeAnnouncements = announcements.filter((a) => a.is_active);
+  const latestAnnouncement = activeAnnouncements[0];
 
   useEffect(() => {
     const load = async () => {
@@ -127,20 +113,9 @@ export default function Home() {
     load();
   }, []);
 
-  const copy = async (value: string, kind: 'net' | 'pass') => {
-    try {
-      await navigator.clipboard.writeText(value);
-      setCopied(kind);
-      toast.success('Copiado');
-      setTimeout(() => setCopied(null), 1500);
-    } catch {
-      toast.error('Não foi possível copiar');
-    }
-  };
-
   return (
     <AppLayout>
-      <div className="p-5 space-y-7 max-w-lg mx-auto animate-fade-in">
+      <div className="p-5 space-y-6 max-w-lg mx-auto animate-fade-in bg-[#F8F9FA] min-h-full">
         {/* Saudação */}
         <div className="space-y-1">
           <p className="text-sm text-muted-foreground">Olá,</p>
@@ -150,20 +125,17 @@ export default function Home() {
         {/* Notificações da Recepção */}
         <ClientNotifications />
 
-        {/* Próxima Reserva */}
-        <section className="space-y-3">
-          <div className="flex items-center justify-between">
+        {/* Próxima Reserva — só aparece se houver */}
+        {nextBooking && (
+          <section className="space-y-3">
             <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
               Sua Próxima Reserva
             </h3>
-          </div>
-
-          {nextBooking ? (
-            <Link to="/reservas">
-              <Card className="border-border/60 hover:border-primary/40 transition-colors">
+            <Link to="/reserva-salas">
+              <Card className="bg-white border-border/60 hover:border-primary/40 transition-colors rounded-2xl">
                 <CardContent className="p-5">
                   <div className="flex items-start gap-4">
-                    <div className="p-2.5 rounded-lg bg-primary/10 shrink-0">
+                    <div className="p-2.5 rounded-xl bg-primary/10 shrink-0">
                       <CalendarCheck className="h-5 w-5 text-primary" />
                     </div>
                     <div className="min-w-0 flex-1 space-y-1">
@@ -185,91 +157,93 @@ export default function Home() {
                 </CardContent>
               </Card>
             </Link>
-          ) : (
-            <Link to="/reservas">
-              <Button variant="outline" className="w-full h-12 font-medium">
-                <CalendarCheck className="h-4 w-4 mr-2" />
-                Nova Reserva
-              </Button>
-            </Link>
-          )}
-        </section>
+          </section>
+        )}
 
-        {/* Acesso Rápido — Wi-Fi */}
+        {/* Acesso Rápido — Grid de 3 */}
         <section>
-          <button
-            type="button"
-            onClick={() => setWifiOpen(true)}
-            className="w-full text-left active:scale-[0.99] transition-transform"
-          >
-            <Card className="border-border/60">
-              <CardContent className="p-4 flex items-center gap-4">
-                <div className="p-2.5 rounded-lg bg-primary/10 shrink-0">
-                  <Wifi className="h-5 w-5 text-primary" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-sm">Wi-Fi do Edifício</p>
-                  <p className="text-xs text-muted-foreground">Toque para ver rede e senha</p>
-                </div>
-                <ChevronRight className="h-4 w-4 text-muted-foreground" />
-              </CardContent>
-            </Card>
-          </button>
+          <div className="grid grid-cols-3 gap-3">
+            <Link to="/tickets/new">
+              <Card className="bg-white border-border/60 rounded-2xl active:scale-95 transition-transform">
+                <CardContent className="p-3 flex flex-col items-center justify-center gap-2 h-24">
+                  <div className="p-2 rounded-xl bg-primary/10">
+                    <MessageSquare className="h-4 w-4 text-primary" />
+                  </div>
+                  <p className="text-xs font-medium text-center leading-tight">Abrir Chamado</p>
+                </CardContent>
+              </Card>
+            </Link>
+            <Link to="/announcements">
+              <Card className="bg-white border-border/60 rounded-2xl active:scale-95 transition-transform">
+                <CardContent className="p-3 flex flex-col items-center justify-center gap-2 h-24">
+                  <div className="p-2 rounded-xl bg-primary/10">
+                    <Megaphone className="h-4 w-4 text-primary" />
+                  </div>
+                  <p className="text-xs font-medium text-center leading-tight">Ver Avisos</p>
+                </CardContent>
+              </Card>
+            </Link>
+            <Link to="/floors">
+              <Card className="bg-white border-border/60 rounded-2xl active:scale-95 transition-transform">
+                <CardContent className="p-3 flex flex-col items-center justify-center gap-2 h-24">
+                  <div className="p-2 rounded-xl bg-primary/10">
+                    <Building2 className="h-4 w-4 text-primary" />
+                  </div>
+                  <p className="text-xs font-medium text-center leading-tight">Andares</p>
+                </CardContent>
+              </Card>
+            </Link>
+          </div>
         </section>
 
-        {/* Avisos */}
-        {recentAnnouncements.length > 0 && (
-          <section className="space-y-3">
+        {/* Avisos Recentes — slim */}
+        {latestAnnouncement && (
+          <section className="space-y-2">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
                 Avisos Recentes
               </h3>
               <Link to="/announcements" className="text-xs text-primary font-medium">
-                Ver todos
+                Ver tudo
               </Link>
             </div>
-            <div className="space-y-2">
-              {recentAnnouncements.map((a) => (
-                <Card key={a.id} className="border-border/60">
-                  <CardContent className="p-4">
-                    <div className="flex items-start gap-3">
-                      <div className="p-2 rounded-lg bg-muted shrink-0">
-                        <AlertCircle className="h-4 w-4 text-foreground/70" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="font-medium text-sm">{a.title}</p>
-                        <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                          {a.content}
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
-                          {formatDistanceToNow(new Date(a.created_at), { addSuffix: true, locale: ptBR })}
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+            <Link to="/announcements">
+              <Card className="bg-white border-border/60 rounded-2xl">
+                <CardContent className="p-4 flex items-center gap-3">
+                  <div className="p-2 rounded-xl bg-muted shrink-0">
+                    <Megaphone className="h-4 w-4 text-foreground/70" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium text-sm truncate">{latestAnnouncement.title}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {formatDistanceToNow(new Date(latestAnnouncement.created_at), {
+                        addSuffix: true,
+                        locale: ptBR,
+                      })}
+                    </p>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                </CardContent>
+              </Card>
+            </Link>
           </section>
         )}
 
-        {/* Meus Chamados */}
-        <section className="space-y-3">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
-              Meus Chamados
-            </h3>
-            <Link to="/tickets" className="text-xs text-primary font-medium">
-              Ver todos
-            </Link>
-          </div>
-
-          {pendingTickets.length > 0 ? (
+        {/* Meus Chamados — apenas 2 */}
+        {pendingTickets.length > 0 && (
+          <section className="space-y-2">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+                Meus Chamados
+              </h3>
+              <Link to="/tickets" className="text-xs text-primary font-medium">
+                Ver tudo
+              </Link>
+            </div>
             <div className="space-y-2">
-              {pendingTickets.slice(0, 3).map((ticket) => (
+              {pendingTickets.slice(0, 2).map((ticket) => (
                 <Link key={ticket.id} to={`/tickets/${ticket.id}`}>
-                  <Card className="border-border/60">
+                  <Card className="bg-white border-border/60 rounded-2xl">
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between gap-3">
                         <div className="min-w-0 flex-1">
@@ -291,63 +265,27 @@ export default function Home() {
                 </Link>
               ))}
             </div>
-          ) : (
-            <Link to="/tickets/new">
-              <Button variant="outline" className="w-full h-12 font-medium">
-                <MessageSquare className="h-4 w-4 mr-2" />
-                Abrir Chamado
-              </Button>
-            </Link>
-          )}
+          </section>
+        )}
+
+        {/* Manual do Usuário — rodapé de utilidade */}
+        <section className="pt-2">
+          <Link to="/manual">
+            <Card className="bg-white border-border/60 rounded-2xl active:scale-[0.99] transition-transform">
+              <CardContent className="p-4 flex items-center gap-4">
+                <div className="p-2.5 rounded-xl bg-primary/10 shrink-0">
+                  <BookOpen className="h-5 w-5 text-primary" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-sm">Manual do Usuário</p>
+                  <p className="text-xs text-muted-foreground">Wi-Fi, acessos e serviços do edifício</p>
+                </div>
+                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+              </CardContent>
+            </Card>
+          </Link>
         </section>
       </div>
-
-      {/* Wi-Fi Dialog */}
-      <Dialog open={wifiOpen} onOpenChange={setWifiOpen}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Wifi className="h-5 w-5 text-primary" />
-              Wi-Fi do Edifício
-            </DialogTitle>
-            <DialogDescription>
-              Use a rede e senha abaixo para se conectar.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-3 mt-2">
-            <div className="rounded-lg border border-border/60 p-3">
-              <p className="text-xs text-muted-foreground">Rede</p>
-              <div className="flex items-center justify-between gap-2 mt-1">
-                <p className="font-medium">{WIFI_NETWORK}</p>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => copy(WIFI_NETWORK, 'net')}
-                  className="h-8 px-2"
-                >
-                  {copied === 'net' ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                </Button>
-              </div>
-            </div>
-
-            <div className="rounded-lg border border-border/60 p-3">
-              <p className="text-xs text-muted-foreground">Senha</p>
-              <div className="flex items-center justify-between gap-2 mt-1">
-                <p className="font-medium font-mono">{WIFI_PASSWORD}</p>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => copy(WIFI_PASSWORD, 'pass')}
-                  className="h-8 px-2"
-                >
-                  {copied === 'pass' ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                </Button>
-              </div>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
     </AppLayout>
   );
 }
