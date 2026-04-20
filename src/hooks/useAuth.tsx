@@ -9,6 +9,8 @@ interface AuthContextType {
   profile: Profile | null;
   role: AppRole | null;
   conexaName: string | null;
+  conexaCpf: string | null;
+  conexaCompany: string | null;
   displayName: string;
   isAdmin: boolean;
   isCentralAtendimento: boolean;
