@@ -31,6 +31,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [role, setRole] = useState<AppRole | null>(null);
   const [conexaName, setConexaName] = useState<string | null>(null);
+  const [conexaCpf, setConexaCpf] = useState<string | null>(null);
+  const [conexaCompany, setConexaCompany] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchProfile = async (userId: string) => {
