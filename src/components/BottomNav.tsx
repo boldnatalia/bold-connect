@@ -15,7 +15,8 @@ import {
   Settings,
   LogOut,
   Send,
-  History
+  History,
+  Ticket
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -27,7 +28,7 @@ interface NavItem {
 
 const clientNavItems: NavItem[] = [
   { icon: Home, label: 'Início', href: '/' },
-  { icon: MessageSquare, label: 'Mensagens', href: '/tickets' },
+  { icon: Ticket, label: 'Chamados', href: '/tickets' },
   { icon: CalendarCheck, label: 'Reservas', href: '/reserva-salas' },
   { icon: User, label: 'Perfil', href: '/profile' },
 ];
