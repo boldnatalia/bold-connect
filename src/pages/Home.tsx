@@ -41,11 +41,19 @@ export default function Home() {
       <div className="p-4 space-y-6 max-w-lg mx-auto animate-fade-in">
         {/* Welcome Section */}
         <div className="space-y-1">
-          <p className="text-muted-foreground">Olá,</p>
-          <h2 className="text-2xl font-bold">{profile?.full_name?.split(' ')[0]}</h2>
-          <p className="text-sm text-muted-foreground">
-            {profile?.company} • Sala {profile?.room}
-          </p>
+          {profile?.full_name ? (
+            <>
+              <p className="text-muted-foreground">Olá,</p>
+              <h2 className="text-2xl font-bold">{profile.full_name.split(' ')[0]}</h2>
+            </>
+          ) : (
+            <h2 className="text-2xl font-bold">Olá, bem-vindo</h2>
+          )}
+          {(profile?.company || profile?.room) && (
+            <p className="text-sm text-muted-foreground">
+              {profile?.company}{profile?.room ? ` • Sala ${profile.room}` : ''}
+            </p>
+          )}
         </div>
 
         {/* Reception Notifications */}
