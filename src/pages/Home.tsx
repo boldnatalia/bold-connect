@@ -23,14 +23,11 @@ import { ptBR } from 'date-fns/locale';
 import { TICKET_STATUS_LABELS } from '@/types';
 
 export default function Home() {
-  const { profile, user } = useAuth();
+  const { profile, displayName } = useAuth();
   const { tickets } = useTickets();
   const { announcements } = useAnnouncements();
 
-  const meta = user?.user_metadata as { full_name?: string; name?: string } | undefined;
-  const displayName =
-    profile?.full_name || meta?.full_name || meta?.name || user?.email?.split('@')[0] || '';
-  const firstName = displayName ? displayName.split(' ')[0] : '';
+  const firstName = displayName ? displayName.split(' ')[0] : 'Usuário Bold';
 
   const pendingTickets = tickets.filter((t) => t.status === 'pending');
   const recentAnnouncements = announcements.filter((a) => a.is_active).slice(0, 3);
@@ -46,14 +43,8 @@ export default function Home() {
       <div className="p-4 space-y-6 max-w-lg mx-auto animate-fade-in">
         {/* Welcome Section */}
         <div className="space-y-1">
-          {firstName ? (
-            <>
-              <p className="text-muted-foreground">Olá,</p>
-              <h2 className="text-2xl font-bold">{firstName}</h2>
-            </>
-          ) : (
-            <h2 className="text-2xl font-bold">Olá, bem-vindo</h2>
-          )}
+          <p className="text-muted-foreground">Olá,</p>
+          <h2 className="text-2xl font-bold">{firstName}</h2>
           {(profile?.company || profile?.room) && (
             <p className="text-sm text-muted-foreground">
               {profile?.company}{profile?.room ? ` • Sala ${profile.room}` : ''}
