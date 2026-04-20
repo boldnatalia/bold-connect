@@ -49,21 +49,30 @@ export default function Profile() {
         <Card>
           <CardContent className="pt-6">
             <div className="flex flex-col items-center text-center">
-              <Avatar className="h-20 w-20 mb-4">
-                <AvatarFallback className="bg-primary/10 text-primary text-xl font-medium">
-                  {profile ? getInitials(profile.full_name) : '?'}
-                </AvatarFallback>
-              </Avatar>
-              <h2 className="text-xl font-bold">{profile?.full_name || 'Bem-vindo'}</h2>
-              <p className="text-sm text-muted-foreground">{user?.email}</p>
-              {profile?.company && (
-                <p className="text-muted-foreground mt-1">{profile.company}</p>
-              )}
-              {isAdmin && (
-                <Badge className="mt-2" variant="secondary">
-                  Administrador
-                </Badge>
-              )}
+              {(() => {
+                const meta = user?.user_metadata as { full_name?: string; name?: string } | undefined;
+                const displayName =
+                  profile?.full_name || meta?.full_name || meta?.name || user?.email?.split('@')[0] || 'Bem-vindo';
+                return (
+                  <>
+                    <Avatar className="h-20 w-20 mb-4">
+                      <AvatarFallback className="bg-primary/10 text-primary text-xl font-medium">
+                        {getInitials(displayName)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <h2 className="text-xl font-bold">{displayName}</h2>
+                    <p className="text-sm text-muted-foreground">{user?.email}</p>
+                    {profile?.company && (
+                      <p className="text-muted-foreground mt-1">{profile.company}</p>
+                    )}
+                    {isAdmin && (
+                      <Badge className="mt-2" variant="secondary">
+                        Administrador
+                      </Badge>
+                    )}
+                  </>
+                );
+              })()}
             </div>
           </CardContent>
         </Card>
