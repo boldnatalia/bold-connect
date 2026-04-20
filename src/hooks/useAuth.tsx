@@ -172,6 +172,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setProfile(null);
     setRole(null);
     setConexaName(null);
+    setConexaCpf(null);
+    setConexaCompany(null);
   };
 
   const meta = user?.user_metadata as { full_name?: string; name?: string } | undefined;
@@ -198,6 +200,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         profile,
         role,
         conexaName,
+        conexaCpf,
+        conexaCompany,
         displayName,
         isAdmin: role === 'admin',
         isCentralAtendimento: role === 'central_atendimento' || role === 'admin',
