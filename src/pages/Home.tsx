@@ -133,7 +133,7 @@ export default function Home() {
               Sua Próxima Reserva
             </h3>
             <Link to="/reserva-salas">
-              <Card className="bg-white border-border/60 hover:border-primary/40 transition-colors rounded-2xl">
+              <Card className="bg-white border-border/60 hover:border-primary/40 transition-colors rounded-2xl shadow-sm">
                 <CardContent className="p-5">
                   <div className="flex items-start gap-4">
                     <div className="p-2.5 rounded-xl bg-primary/10 shrink-0">
@@ -165,7 +165,7 @@ export default function Home() {
         <section>
           <div className="grid grid-cols-3 gap-3">
             <Link to="/tickets/new">
-              <Card className="bg-white border-border/60 rounded-2xl active:scale-95 transition-transform">
+              <Card className="bg-white border-border/60 rounded-2xl shadow-sm active:scale-95 transition-transform">
                 <CardContent className="p-3 flex flex-col items-center justify-center gap-2 h-24">
                   <div className="p-2 rounded-xl bg-primary/10">
                     <MessageSquare className="h-4 w-4 text-primary" />
@@ -175,7 +175,7 @@ export default function Home() {
               </Card>
             </Link>
             <Link to="/announcements">
-              <Card className="bg-white border-border/60 rounded-2xl active:scale-95 transition-transform">
+              <Card className="bg-white border-border/60 rounded-2xl shadow-sm active:scale-95 transition-transform">
                 <CardContent className="p-3 flex flex-col items-center justify-center gap-2 h-24">
                   <div className="p-2 rounded-xl bg-primary/10">
                     <Megaphone className="h-4 w-4 text-primary" />
@@ -185,7 +185,7 @@ export default function Home() {
               </Card>
             </Link>
             <Link to="/floors">
-              <Card className="bg-white border-border/60 rounded-2xl active:scale-95 transition-transform">
+              <Card className="bg-white border-border/60 rounded-2xl shadow-sm active:scale-95 transition-transform">
                 <CardContent className="p-3 flex flex-col items-center justify-center gap-2 h-24">
                   <div className="p-2 rounded-xl bg-primary/10">
                     <Building2 className="h-4 w-4 text-primary" />
@@ -209,7 +209,7 @@ export default function Home() {
               </Link>
             </div>
             <Link to="/announcements">
-              <Card className="bg-white border-border/60 rounded-2xl">
+              <Card className="bg-white border-border/60 rounded-2xl shadow-sm">
                 <CardContent className="p-4 flex items-center gap-3">
                   <div className="p-2 rounded-xl bg-muted shrink-0">
                     <Megaphone className="h-4 w-4 text-foreground/70" />
@@ -244,7 +244,7 @@ export default function Home() {
             <div className="space-y-2">
               {pendingTickets.slice(0, 2).map((ticket) => (
                 <Link key={ticket.id} to={`/tickets/${ticket.id}`}>
-                  <Card className="bg-white border-border/60 rounded-2xl">
+                  <Card className="bg-white border-border/60 rounded-2xl shadow-sm">
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between gap-3">
                         <div className="min-w-0 flex-1">
@@ -272,7 +272,7 @@ export default function Home() {
         {/* Manual do Usuário — rodapé de utilidade */}
         <section className="pt-2">
           <Link to="/manual">
-            <Card className="bg-white border-border/60 rounded-2xl active:scale-[0.99] transition-transform">
+            <Card className="bg-white border-border/60 rounded-2xl shadow-sm active:scale-[0.99] transition-transform">
               <CardContent className="p-4 flex items-center gap-4">
                 <div className="p-2.5 rounded-xl bg-primary/10 shrink-0">
                   <BookOpen className="h-5 w-5 text-primary" />
