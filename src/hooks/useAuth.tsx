@@ -66,9 +66,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.warn('[Conexa] erro ao buscar nome:', error.message);
         return;
       }
-      if (data?.name) {
-        setConexaName(data.name as string);
-      }
+      if (data?.name) setConexaName(data.name as string);
+      if (data?.cpf) setConexaCpf(String(data.cpf));
+      if (data?.company) setConexaCompany(String(data.company));
     } catch (err) {
       console.warn('[Conexa] falha ao invocar função:', err);
     }
