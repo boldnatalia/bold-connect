@@ -5,7 +5,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
-import { Building2, MapPin, Mail, CreditCard, Calendar, LogOut } from 'lucide-react';
+import { Building2, MapPin, Mail, CreditCard, Calendar, LogOut, MessageCircle, HeadphonesIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
@@ -54,8 +54,11 @@ export default function Profile() {
                   {profile ? getInitials(profile.full_name) : '?'}
                 </AvatarFallback>
               </Avatar>
-              <h2 className="text-xl font-bold">{profile?.full_name}</h2>
-              <p className="text-muted-foreground">{profile?.company}</p>
+              <h2 className="text-xl font-bold">{profile?.full_name || 'Bem-vindo'}</h2>
+              <p className="text-sm text-muted-foreground">{user?.email}</p>
+              {profile?.company && (
+                <p className="text-muted-foreground mt-1">{profile.company}</p>
+              )}
               {isAdmin && (
                 <Badge className="mt-2" variant="secondary">
                   Administrador
@@ -134,6 +137,34 @@ export default function Profile() {
                 </p>
               </div>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Suporte */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <HeadphonesIcon className="h-5 w-5 text-primary" />
+              Suporte
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              Precisa de ajuda? Fale com a administração do Bold pelo WhatsApp.
+            </p>
+            <Button
+              variant="outline"
+              className="w-full active:scale-95 transition-transform"
+              onClick={() => {
+                window.location.href = 'https://wa.me/5547991281130';
+              }}
+            >
+              <MessageCircle className="mr-2 h-4 w-4" />
+              Falar no WhatsApp
+            </Button>
+            <p className="text-xs text-muted-foreground text-center">
+              (47) 99128-1130 • Seg a Sex, 09:00 às 17:00
+            </p>
           </CardContent>
         </Card>
 
