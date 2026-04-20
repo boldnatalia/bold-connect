@@ -136,6 +136,17 @@ export default function Profile() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Logout */}
+        <Button
+          variant="outline"
+          className="w-full border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground active:scale-95 transition-transform"
+          onClick={handleSignOut}
+          disabled={signingOut}
+        >
+          <LogOut className="mr-2 h-4 w-4" />
+          {signingOut ? 'Saindo...' : 'Sair da Conta'}
+        </Button>
       </div>
     </AppLayout>
   );
