@@ -47,11 +47,11 @@ export default function Floors() {
           ) : (
             <div className="space-y-4">
               {floors.map((floor) => {
-                const hasGallery = !!FLOOR_GALLERIES[floor.floor_number];
+                const hasGallery = FLOORS_WITH_GALLERY.has(floor.floor_number);
                 return (
                   <Card
                     key={floor.id}
-                    onClick={hasGallery ? () => setGalleryFloor(floor.floor_number) : undefined}
+                    onClick={hasGallery ? () => navigate(`/floors/${floor.floor_number}/galeria`) : undefined}
                     className={`card-premium relative ${!floor.is_available ? 'opacity-60' : ''} ${
                       hasGallery ? 'cursor-pointer transition-transform active:scale-[0.98]' : ''
                     }`}
@@ -127,28 +127,6 @@ export default function Floors() {
           )}
         </div>
       </div>
-
-      <Dialog open={galleryFloor !== null} onOpenChange={(open) => !open && setGalleryFloor(null)}>
-        <DialogContent className="max-w-md p-4">
-          <Carousel className="w-full">
-            <CarouselContent>
-              {galleryImages.map((img, idx) => (
-                <CarouselItem key={idx}>
-                  <div className="overflow-hidden rounded-lg">
-                    <img src={img.src} alt={img.alt} className="w-full h-auto object-cover" />
-                  </div>
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-            {galleryImages.length > 1 && (
-              <>
-                <CarouselPrevious />
-                <CarouselNext />
-              </>
-            )}
-          </Carousel>
-        </DialogContent>
-      </Dialog>
     </AppLayout>
   );
 }
