@@ -19,16 +19,12 @@ interface HeaderProps {
 
 export function Header({ title, showBack, rightAction }: HeaderProps) {
   const navigate = useNavigate();
-  const { profile, user, signOut, isAdmin } = useAuth();
+  const { profile, user, displayName, signOut, isAdmin } = useAuth();
 
   const handleSignOut = async () => {
     await signOut();
     navigate('/login');
   };
-
-  const meta = user?.user_metadata as { full_name?: string; name?: string } | undefined;
-  const displayName =
-    profile?.full_name || meta?.full_name || meta?.name || user?.email?.split('@')[0] || '';
 
   const getInitials = (name: string) => {
     return name
