@@ -97,7 +97,10 @@ const extractDate = (val?: string): string => {
 };
 
 const parseBooking = (b: ConexaBooking, idx: number): ParsedBooking => {
-  const roomId = pickNumber(b, ['roomId', 'roomsId', 'room_id']);
+  // Conexa V2 returns the room inside `place: { id, name }`
+  const place = (b.place ?? b.room) as { id?: number; name?: string } | undefined;
+  let roomId = pickNumber(b, ['roomId', 'roomsId', 'room_id']);
+  if (!roomId && place?.id) roomId = Number(place.id);
 
   const startRaw = pick(b, [
     'startTime', 'bookingDateTime', 'bookingDateTimeFrom', 'startDateTime', 'dateTimeFrom',
@@ -108,6 +111,7 @@ const parseBooking = (b: ConexaBooking, idx: number): ParsedBooking => {
   const dateRaw = pick(b, ['date', 'bookingDate']) || startRaw;
 
   const id = pick(b, ['bookingId', 'id', 'roomBookingId']) || `b-${idx}`;
+  const fallbackName = place?.name || `Sala ${roomId || '—'}`;
 
   return {
     id,
