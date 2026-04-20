@@ -156,10 +156,10 @@ export default function RoomBooking() {
     setBookingsError(null);
     try {
       const { data, error } = await supabase.functions.invoke('conexa-get-bookings');
+      console.log('Dados CRUS do Conexa:', data);
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       const list = Array.isArray(data?.bookings) ? data.bookings : [];
-      // Debug: ajuda a identificar nomes de campos retornados pelo Conexa
       console.log('[conexa-get-bookings] raw bookings:', list);
       setBookings(list.map((b: ConexaBooking, i: number) => parseBooking(b, i)));
     } catch (err) {
