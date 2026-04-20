@@ -23,6 +23,7 @@ import NewTicket from "./pages/NewTicket";
 import Announcements from "./pages/Announcements";
 import Menu from "./pages/Menu";
 import Floors from "./pages/Floors";
+import FloorGallery from "./pages/FloorGallery";
 import Manual from "./pages/Manual";
 import MeetingRooms from "./pages/MeetingRooms";
 import RoomBooking from "./pages/RoomBooking";
@@ -70,6 +71,7 @@ const App = () => (
             <Route path="/announcements" element={<ProtectedRoute><Announcements /></ProtectedRoute>} />
             <Route path="/menu" element={<ProtectedRoute><Menu /></ProtectedRoute>} />
             <Route path="/floors" element={<ProtectedRoute><Floors /></ProtectedRoute>} />
+            <Route path="/floors/:floorNumber/galeria" element={<ProtectedRoute><FloorGallery /></ProtectedRoute>} />
             <Route path="/manual" element={<ProtectedRoute><Manual /></ProtectedRoute>} />
             <Route path="/meeting-rooms" element={<ProtectedRoute><MeetingRooms /></ProtectedRoute>} />
             <Route path="/reserva-salas" element={<ProtectedRoute><RoomBooking /></ProtectedRoute>} />
