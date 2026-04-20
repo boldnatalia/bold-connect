@@ -347,11 +347,15 @@ export default function RoomBooking() {
                     <Button
                       variant="outline"
                       size="sm"
+                      disabled={cancellingId === b.id}
                       className="w-full mt-3 min-h-[40px] text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive"
                       onClick={() => handleCancel(b.id)}
                     >
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Cancelar Reserva
+                      {cancellingId === b.id ? (
+                        <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Cancelando...</>
+                      ) : (
+                        <><Trash2 className="h-4 w-4 mr-2" /> Cancelar Reserva</>
+                      )}
                     </Button>
                   </Card>
                 );
