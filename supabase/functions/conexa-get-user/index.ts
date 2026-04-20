@@ -66,14 +66,42 @@ serve(async (req) => {
       )
     }
 
+    // Buscar detalhes completos da pessoa (endpoint /person/:id costuma ter mais campos como cpf)
+    let detail: Record<string, any> = foundPerson;
+    const personId = foundPerson.id ?? foundPerson.personId ?? foundPerson.customerId;
+    if (personId) {
+      try {
+        const detailRes = await fetch(`${CONEXA_BASE_URL}/person/${personId}`, {
+          headers: { 'Authorization': `Bearer ${conexaToken}`, 'Accept': 'application/json' },
+        });
+        if (detailRes.ok) {
+          const detailJson = await detailRes.json();
+          detail = detailJson?.data ?? detailJson ?? foundPerson;
+        }
+      } catch (e) {
+        console.warn('[Conexa] erro ao buscar detalhe:', e);
+      }
+    }
+
+    const merged: Record<string, any> = { ...foundPerson, ...detail };
+
+    const cpf =
+      merged.cpf ?? merged.CPF ?? merged.document ?? merged.documentNumber ??
+      merged.cpfCnpj ?? merged.cpf_cnpj ?? null;
+
+    const company =
+      merged.companyName ?? merged.corporateName ?? merged.company ??
+      merged.razaoSocial ?? merged.razao_social ?? merged.tradeName ??
+      merged.fantasyName ?? merged.unitName ?? null;
+
     return new Response(
       JSON.stringify({
         success: true,
-        name: foundPerson.name ?? null,
-        customerId: foundPerson.customerId ?? null,
-        cpf: foundPerson.cpf ?? foundPerson.document ?? null,
-        company: foundPerson.companyName ?? foundPerson.corporateName ?? foundPerson.company ?? null,
-        raw: foundPerson,
+        name: merged.name ?? null,
+        customerId: merged.customerId ?? merged.id ?? null,
+        cpf,
+        company,
+        raw: merged,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     )
