@@ -35,7 +35,7 @@ serve(async (req) => {
 
     let offset = 0;
     const limit = 100;
-    let foundPerson: { name?: string; customerId?: string | number; emails?: string[] } | null = null;
+    let foundPerson: { name?: string; customerId?: string | number; emails?: string[]; cpf?: string; document?: string; companyName?: string; company?: string; corporateName?: string } | null = null;
 
     while (!foundPerson) {
       const url = `${CONEXA_BASE_URL}/persons?limit=${limit}&offset=${offset}&active=1`;
