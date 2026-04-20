@@ -1,36 +1,20 @@
-import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/AppLayout';
 import { useFloors } from '@/hooks/useFloors';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from '@/components/ui/carousel';
 import { Building2, Loader2, Star, AlertTriangle, Images } from 'lucide-react';
 import boldFacade from '@/assets/bold-facade.jpg';
-import floor3Corridor from '@/assets/floor-3-corridor.jpg';
-import floor3Corridor2 from '@/assets/floor-3-corridor-2.jpg';
 
 // Tags que recebem destaque dourado da marca Bold
 const HIGHLIGHT_TAGS = new Set(['Em Obras', 'Premium']);
 
-const FLOOR_GALLERIES: Record<number, { src: string; alt: string }[]> = {
-  3: [
-    { src: floor3Corridor, alt: 'Corredor com divisórias de vidro e área de recepção do 3º andar' },
-    { src: floor3Corridor2, alt: 'Corredor do 3º andar com salas privativas e área de espera' },
-  ],
-};
+// Andares que possuem galeria dedicada
+const FLOORS_WITH_GALLERY = new Set([3]);
 
 export default function Floors() {
   const { floors, isLoading } = useFloors();
-  const [galleryFloor, setGalleryFloor] = useState<number | null>(null);
-
-  const galleryImages = galleryFloor !== null ? FLOOR_GALLERIES[galleryFloor] ?? [] : [];
+  const navigate = useNavigate();
 
   return (
     <AppLayout title="Andares">
