@@ -171,12 +171,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const meta = user?.user_metadata as { full_name?: string; name?: string } | undefined;
-  const displayName =
+  const rawName =
     conexaName ||
     profile?.full_name ||
     meta?.full_name ||
     meta?.name ||
-    'Usuário Bold';
+    '';
+  const toTitleCase = (s: string) =>
+    s
+      .toLowerCase()
+      .split(/\s+/)
+      .filter(Boolean)
+      .map((w) => (w.length <= 2 ? w : w.charAt(0).toUpperCase() + w.slice(1)))
+      .join(' ');
+  const displayName = rawName ? toTitleCase(rawName) : 'Usuário Bold';
 
   return (
     <AuthContext.Provider
