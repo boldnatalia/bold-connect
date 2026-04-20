@@ -13,7 +13,7 @@ import { toast } from 'sonner';
 import { useState } from 'react';
 
 export default function Profile() {
-  const { profile, user, isAdmin, displayName, signOut } = useAuth();
+  const { profile, user, isAdmin, displayName, conexaCpf, conexaCompany, signOut } = useAuth();
   const navigate = useNavigate();
   const [signingOut, setSigningOut] = useState(false);
 
