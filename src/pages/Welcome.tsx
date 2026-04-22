@@ -105,7 +105,7 @@ export default function Welcome() {
         <div className="space-y-4">
           <Button
             size="lg"
-            className="w-full h-14 text-base font-semibold bg-primary text-primary-foreground hover:bg-primary/90 active:scale-[0.98] transition-transform"
+            className="relative z-20 w-full h-14 text-base font-semibold bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 active:scale-[0.98] transition-transform"
             onClick={() => navigate('/login')}
           >
             Acessar Workplace
@@ -115,14 +115,14 @@ export default function Welcome() {
             href={SUPPORT_WHATSAPP}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-center gap-2 text-sm text-white/80 hover:text-white min-h-[44px]"
+            className="relative z-20 flex items-center justify-center gap-2 text-sm text-white hover:text-white min-h-[44px] drop-shadow-md"
           >
             <MessageCircle className="h-4 w-4" />
             Precisa de ajuda? Fale conosco
           </a>
 
           {/* Footer address */}
-          <p className="text-center text-[11px] text-white/60 pt-4 leading-snug">
+          <p className="relative z-20 text-center text-[11px] text-white/80 pt-4 leading-snug drop-shadow">
             Rua Ministro Calógeras, 343 — Bucarein, Joinville/SC
           </p>
         </div>
