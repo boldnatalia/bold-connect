@@ -1,17 +1,29 @@
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
-import { useEffect } from 'react';
-import { Loader2, Shield, DoorOpen } from 'lucide-react';
-import logoIcon from '@/assets/logo-icon.jpeg';
+import { useEffect, useRef, useState } from 'react';
+import { Loader2, Shield, DoorOpen, MessageCircle } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
+import facadeImage from '@/assets/bold-facade.jpg';
+import logoBold from '@/assets/logo-bold-full.jpeg';
+
+const SUPPORT_WHATSAPP = 'https://wa.me/5547991281130';
 
 export default function Welcome() {
   const navigate = useNavigate();
   const { user, isLoading, isCentralAtendimento, isRecepcao } = useAuth();
+  const [staffMenuOpen, setStaffMenuOpen] = useState(false);
+  const pressTimer = useRef<number | null>(null);
+  const longPressTriggered = useRef(false);
 
   useEffect(() => {
     if (user && !isLoading) {
-      // Redirect based on role
       if (isCentralAtendimento) {
         navigate('/admin');
       } else if (isRecepcao) {
@@ -22,6 +34,21 @@ export default function Welcome() {
     }
   }, [user, isLoading, isCentralAtendimento, isRecepcao, navigate]);
 
+  const startPress = () => {
+    longPressTriggered.current = false;
+    pressTimer.current = window.setTimeout(() => {
+      longPressTriggered.current = true;
+      setStaffMenuOpen(true);
+    }, 3000);
+  };
+
+  const cancelPress = () => {
+    if (pressTimer.current) {
+      window.clearTimeout(pressTimer.current);
+      pressTimer.current = null;
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen min-h-[100dvh] flex items-center justify-center bg-background">
@@ -31,44 +58,109 @@ export default function Welcome() {
   }
 
   return (
-    <div className="min-h-screen min-h-[100dvh] flex flex-col bg-background">
-      {/* Main content */}
-      <div className="flex-1 flex flex-col items-center justify-center p-6">
-        {/* Logo and branding */}
-        <div className="flex flex-col items-center gap-4 mb-12">
-          <img src={logoIcon} alt="Bold Workplace" className="w-20 h-20 object-contain rounded-2xl" />
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">Bold Workplace</h1>
+    <div
+      className="relative min-h-screen min-h-[100dvh] flex flex-col bg-cover bg-center"
+      style={{ backgroundImage: `url(${facadeImage})` }}
+    >
+      {/* Overlay */}
+      <div className="absolute inset-0 bg-black/60" aria-hidden="true" />
+
+      {/* Content */}
+      <div className="relative z-10 flex-1 flex flex-col px-6 pt-16 pb-6 max-w-lg mx-auto w-full">
+        {/* Logo + slogan (with long-press easter egg) */}
+        <div className="flex-1 flex flex-col items-center justify-center text-center">
+          <button
+            type="button"
+            aria-label="Bold Workplace"
+            className="select-none focus:outline-none"
+            style={{ WebkitTouchCallout: 'none', WebkitUserSelect: 'none' }}
+            onMouseDown={startPress}
+            onMouseUp={cancelPress}
+            onMouseLeave={cancelPress}
+            onTouchStart={startPress}
+            onTouchEnd={cancelPress}
+            onTouchCancel={cancelPress}
+            onContextMenu={(e) => e.preventDefault()}
+            onClick={(e) => {
+              if (longPressTriggered.current) {
+                e.preventDefault();
+                e.stopPropagation();
+              }
+            }}
+          >
+            <img
+              src={logoBold}
+              alt="Bold Workplace"
+              draggable={false}
+              className="w-40 h-40 object-contain mx-auto brightness-0 invert pointer-events-none"
+            />
+          </button>
+
+          <p className="mt-6 text-white/90 text-base leading-relaxed font-light max-w-xs italic">
+            Escritórios corporativos desenhados para grandes decisões
+          </p>
         </div>
 
-        {/* Main action button */}
-        <Button 
-          size="lg" 
-          className="w-full max-w-sm h-14 text-lg font-semibold"
-          onClick={() => navigate('/login')}
-        >
-          Entrar
-        </Button>
+        {/* Action area */}
+        <div className="space-y-4">
+          <Button
+            size="lg"
+            className="w-full h-14 text-base font-semibold bg-primary text-primary-foreground hover:bg-primary/90 active:scale-[0.98] transition-transform"
+            onClick={() => navigate('/login')}
+          >
+            Acessar Workplace
+          </Button>
+
+          <a
+            href={SUPPORT_WHATSAPP}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center gap-2 text-sm text-white/80 hover:text-white min-h-[44px]"
+          >
+            <MessageCircle className="h-4 w-4" />
+            Precisa de ajuda? Fale conosco
+          </a>
+
+          {/* Footer address */}
+          <p className="text-center text-[11px] text-white/60 pt-4 leading-snug">
+            Rua Ministro Calógeras, 343 — Bucarein, Joinville/SC
+          </p>
+        </div>
       </div>
 
-      {/* Footer with staff access */}
-      <div className="p-6 pb-8 space-y-2">
-        <Button
-          variant="ghost"
-          className="w-full text-muted-foreground active:bg-muted min-h-[44px]"
-          onClick={() => navigate('/reception-login')}
-        >
-          <DoorOpen className="mr-2 h-4 w-4" />
-          Acesso Recepção
-        </Button>
-        <Button
-          variant="ghost"
-          className="w-full text-muted-foreground active:bg-muted min-h-[44px]"
-          onClick={() => navigate('/admin-login')}
-        >
-          <Shield className="mr-2 h-4 w-4" />
-          Central de Atendimento
-        </Button>
-      </div>
+      {/* Staff easter-egg menu */}
+      <Dialog open={staffMenuOpen} onOpenChange={setStaffMenuOpen}>
+        <DialogContent className="max-w-xs rounded-2xl">
+          <DialogHeader>
+            <DialogTitle>Acesso restrito</DialogTitle>
+            <DialogDescription>Selecione o painel desejado.</DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-2 pt-2">
+            <Button
+              variant="outline"
+              className="w-full justify-start h-12"
+              onClick={() => {
+                setStaffMenuOpen(false);
+                navigate('/reception-login');
+              }}
+            >
+              <DoorOpen className="mr-2 h-4 w-4" />
+              Acesso Recepção
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full justify-start h-12"
+              onClick={() => {
+                setStaffMenuOpen(false);
+                navigate('/admin-login');
+              }}
+            >
+              <Shield className="mr-2 h-4 w-4" />
+              Acesso Central
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
