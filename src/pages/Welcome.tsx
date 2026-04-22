@@ -11,7 +11,7 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import facadeImage from '@/assets/bold-facade.jpg';
-import logoBold from '@/assets/logo-bold-full.jpeg';
+import logoBold from '@/assets/logo-bold-workplace.png';
 
 const SUPPORT_WHATSAPP = 'https://wa.me/5547991281130';
 
@@ -92,7 +92,7 @@ export default function Welcome() {
               src={logoBold}
               alt="Bold Workplace"
               draggable={false}
-              className="w-40 h-40 object-contain mx-auto brightness-0 invert pointer-events-none"
+              className="w-[230px] h-auto object-contain mx-auto pointer-events-none"
             />
           </button>
 
