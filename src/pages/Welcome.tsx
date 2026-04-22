@@ -115,7 +115,12 @@ export default function Welcome() {
             href={SUPPORT_WHATSAPP}
             target="_blank"
             rel="noopener noreferrer"
-            className="relative z-20 flex items-center justify-center gap-2 text-sm text-white hover:text-white min-h-[44px] drop-shadow-md"
+            onClick={(e) => {
+              e.preventDefault();
+              window.open(SUPPORT_WHATSAPP, '_blank', 'noopener,noreferrer') ||
+                (window.location.href = SUPPORT_WHATSAPP);
+            }}
+            className="relative z-20 flex items-center justify-center gap-2 text-sm text-white hover:text-white min-h-[44px] drop-shadow-md cursor-pointer"
           >
             <MessageCircle className="h-4 w-4" />
             Precisa de ajuda? Fale conosco
