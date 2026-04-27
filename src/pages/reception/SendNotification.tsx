@@ -104,14 +104,13 @@ export default function SendNotification() {
   const filteredClients = useMemo(() => {
     if (!recipientQuery.trim()) return [];
     const q = recipientQuery.toLowerCase();
-    return activeClients
-      .filter(p =>
-        p.full_name.toLowerCase().includes(q) ||
-        companyOf(p).toLowerCase().includes(q) ||
-        (p.room || '').toLowerCase().includes(q)
+    return searchablePersons
+      .filter(({ person, companyName }) =>
+        person.name.toLowerCase().includes(q) ||
+        companyName.toLowerCase().includes(q)
       )
-      .slice(0, 6);
-  }, [recipientQuery, activeClients, customerById]);
+      .slice(0, 8);
+  }, [recipientQuery, searchablePersons]);
 
   const requiresClientResponse = selectedMessageData?.has_input_field && selectedMessageData.category === 'Códigos';
   const needsReceptionInput = selectedMessageData?.has_input_field && !requiresClientResponse;
