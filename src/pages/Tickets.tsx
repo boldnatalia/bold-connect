@@ -11,6 +11,8 @@ import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { TICKET_STATUS_LABELS, TicketStatus } from '@/types';
 import { cn } from '@/lib/utils';
+import { getServiceTypeMeta } from '@/lib/ticketIcons';
+import { hasUnreadAdminUpdate } from '@/lib/ticketSeen';
 
 export default function Tickets() {
   const { tickets, isLoading } = useTickets();
@@ -61,38 +63,64 @@ export default function Tickets() {
           </div>
         ) : filteredTickets.length > 0 ? (
           <div className="space-y-3">
-            {filteredTickets.map((ticket) => (
-              <Link key={ticket.id} to={`/tickets/${ticket.id}`}>
-                <Card className="card-premium">
-                  <CardContent className="p-4">
-                    <div className="flex items-start gap-3">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <Badge 
-                            variant="outline" 
-                            className={cn('text-[10px] shrink-0', getStatusClass(ticket.status))}
-                          >
-                            {TICKET_STATUS_LABELS[ticket.status]}
-                          </Badge>
+            {filteredTickets.map((ticket) => {
+              const { Icon, label } = getServiceTypeMeta(ticket.title);
+              const hasUpdate = hasUnreadAdminUpdate(ticket.id, ticket.last_admin_comment_at);
+              return (
+                <Link key={ticket.id} to={`/tickets/${ticket.id}`}>
+                  <Card className="card-premium">
+                    <CardContent className="p-4">
+                      <div className="flex items-start gap-3">
+                        {/* Service type icon */}
+                        <div
+                          className="shrink-0 h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center"
+                          aria-label={label}
+                          title={label}
+                        >
+                          <Icon className="h-5 w-5 text-primary" />
                         </div>
-                        <p className="font-medium text-sm">{ticket.title}</p>
-                        <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                          {ticket.description}
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
-                          {ticket.status === 'pending' ? 'Pendente há ' : 'Aberto há '}
-                          {formatDistanceToNow(new Date(ticket.created_at), {
-                            locale: ptBR,
-                          })}
-                        </p>
+
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1 flex-wrap">
+                            <Badge
+                              variant="outline"
+                              className={cn('text-[10px] shrink-0', getStatusClass(ticket.status))}
+                            >
+                              {TICKET_STATUS_LABELS[ticket.status]}
+                            </Badge>
+                            {hasUpdate && (
+                              <span
+                                className="inline-flex items-center gap-1 text-[10px] font-medium text-primary"
+                                title="Nova atualização da administração"
+                              >
+                                <span className="relative flex h-2 w-2">
+                                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
+                                  <span className="relative inline-flex rounded-full h-2 w-2 bg-primary" />
+                                </span>
+                                <MessageSquare className="h-3 w-3" />
+                                Nova resposta
+                              </span>
+                            )}
+                          </div>
+                          <p className="font-medium text-sm">{ticket.title}</p>
+                          <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                            {ticket.description}
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
+                            <Clock className="h-3 w-3" />
+                            {ticket.status === 'pending' ? 'Pendente há ' : 'Aberto há '}
+                            {formatDistanceToNow(new Date(ticket.created_at), {
+                              locale: ptBR,
+                            })}
+                          </p>
+                        </div>
+                        <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
                       </div>
-                      <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
+                    </CardContent>
+                  </Card>
+                </Link>
+              );
+            })}
           </div>
         ) : (
           <Card className="card-premium">
