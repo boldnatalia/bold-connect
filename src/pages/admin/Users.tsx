@@ -554,13 +554,65 @@ export default function AdminUsers() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="company">Empresa *</Label>
-                  <Input
-                    id="company"
-                    placeholder="Nome da empresa"
-                    value={formData.company}
-                    onChange={(e) => setFormData({ ...formData, company: e.target.value })}
-                  />
+                  <Label>Empresa (Conexa) *</Label>
+                  <Popover open={companyPickerOpen} onOpenChange={setCompanyPickerOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        role="combobox"
+                        className="w-full justify-between font-normal"
+                      >
+                        <span className="truncate">
+                          {formData.conexa_customer_id
+                            ? (customers.find(c => c.id === formData.conexa_customer_id)?.trade_name
+                                || customers.find(c => c.id === formData.conexa_customer_id)?.name
+                                || 'Empresa selecionada')
+                            : (customersLoading ? 'Carregando empresas...' : 'Selecione uma empresa')}
+                        </span>
+                        <ChevronsUpDown className="h-4 w-4 opacity-50 shrink-0 ml-2" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                      <Command>
+                        <CommandInput placeholder="Buscar empresa..." />
+                        <CommandList>
+                          <CommandEmpty>
+                            {customers.length === 0
+                              ? 'Nenhuma empresa. Sincronize a base Conexa.'
+                              : 'Nenhuma empresa encontrada.'}
+                          </CommandEmpty>
+                          <CommandGroup>
+                            {customers.map(c => (
+                              <CommandItem
+                                key={c.id}
+                                value={`${c.name} ${c.trade_name ?? ''} ${c.document ?? ''}`}
+                                onSelect={() => {
+                                  setFormData({
+                                    ...formData,
+                                    conexa_customer_id: c.id,
+                                    company: c.trade_name || c.name,
+                                  });
+                                  setCompanyPickerOpen(false);
+                                }}
+                              >
+                                <Check className={cn('mr-2 h-4 w-4', formData.conexa_customer_id === c.id ? 'opacity-100' : 'opacity-0')} />
+                                <div className="min-w-0">
+                                  <p className="text-sm font-medium truncate">{c.trade_name || c.name}</p>
+                                  {c.trade_name && c.name !== c.trade_name && (
+                                    <p className="text-xs text-muted-foreground truncate">{c.name}</p>
+                                  )}
+                                </div>
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                  <p className="text-xs text-muted-foreground">
+                    {customers.length} empresa(s) ativa(s) no Conexa
+                  </p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
