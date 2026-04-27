@@ -215,6 +215,7 @@ export default function AdminUsers() {
         cpf: data.cpf,
         company: data.company,
         conexa_customer_id: data.conexa_customer_id || null,
+        conexa_person_id: data.conexa_person_id || null,
         floor_id: data.floor_id,
         room: data.room,
       });
@@ -251,6 +252,7 @@ export default function AdminUsers() {
           cpf: data.cpf,
           company: data.company,
           conexa_customer_id: data.conexa_customer_id || null,
+          conexa_person_id: data.conexa_person_id || null,
           floor_id: data.floor_id,
           room: data.room,
         })
@@ -342,6 +344,7 @@ export default function AdminUsers() {
       cpf: '',
       company: '',
       conexa_customer_id: '',
+      conexa_person_id: '',
       floor_id: '',
       room: '',
     });
@@ -393,6 +396,7 @@ export default function AdminUsers() {
       cpf: profile.cpf,
       company: profile.company,
       conexa_customer_id: (profile as any).conexa_customer_id || '',
+      conexa_person_id: (profile as any).conexa_person_id || '',
       floor_id: profile.floor_id || '',
       room: profile.room,
     });
