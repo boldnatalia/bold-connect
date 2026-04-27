@@ -43,9 +43,13 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useFloors } from '@/hooks/useFloors';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Loader2, Search, UserPlus, MoreVertical, UserX, UserCheck, Trash2, Edit, Filter, X } from 'lucide-react';
+import { Plus, Loader2, Search, UserPlus, MoreVertical, UserX, UserCheck, Trash2, Edit, Filter, X, RefreshCw, Building2, Check, ChevronsUpDown } from 'lucide-react';
 import type { Profile } from '@/types';
 import { z } from 'zod';
+import { useCustomers } from '@/hooks/useCustomers';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { cn } from '@/lib/utils';
 
 const ITEMS_PER_PAGE = 20;
 
@@ -54,7 +58,8 @@ const userSchema = z.object({
   password: z.string().min(6, 'Senha deve ter pelo menos 6 caracteres'),
   full_name: z.string().min(3, 'Nome deve ter pelo menos 3 caracteres'),
   cpf: z.string().regex(/^\d{11}$/, 'CPF deve ter 11 dígitos'),
-  company: z.string().min(2, 'Empresa deve ter pelo menos 2 caracteres'),
+  company: z.string().min(2, 'Selecione uma empresa'),
+  conexa_customer_id: z.string().uuid('Selecione uma empresa do Conexa'),
   floor_id: z.string().uuid('Selecione um andar'),
   room: z.string().min(1, 'Informe a sala'),
 });
@@ -62,7 +67,8 @@ const userSchema = z.object({
 const editUserSchema = z.object({
   full_name: z.string().min(3, 'Nome deve ter pelo menos 3 caracteres'),
   cpf: z.string().regex(/^\d{11}$/, 'CPF deve ter 11 dígitos'),
-  company: z.string().min(2, 'Empresa deve ter pelo menos 2 caracteres'),
+  company: z.string().min(2, 'Selecione uma empresa'),
+  conexa_customer_id: z.string().uuid('Selecione uma empresa do Conexa').optional().or(z.literal('')),
   floor_id: z.string().uuid('Selecione um andar'),
   room: z.string().min(1, 'Informe a sala'),
 });
@@ -73,6 +79,10 @@ export default function AdminUsers() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { floors } = useFloors();
+  const { customers, isLoading: customersLoading, refetch: refetchCustomers } = useCustomers();
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [companyPickerOpen, setCompanyPickerOpen] = useState(false);
+  const [editCompanyPickerOpen, setEditCompanyPickerOpen] = useState(false);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -90,6 +100,7 @@ export default function AdminUsers() {
     full_name: '',
     cpf: '',
     company: '',
+    conexa_customer_id: '',
     floor_id: '',
     room: '',
   });
@@ -98,9 +109,32 @@ export default function AdminUsers() {
     full_name: '',
     cpf: '',
     company: '',
+    conexa_customer_id: '',
     floor_id: '',
     room: '',
   });
+
+  const handleSyncConexa = async () => {
+    setIsSyncing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('conexa-sync');
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      await refetchCustomers();
+      toast({
+        title: '✓ Base sincronizada',
+        description: `${data.customers} empresas e ${data.persons} pessoas atualizadas.`,
+      });
+    } catch (e: any) {
+      toast({
+        title: 'Erro ao sincronizar',
+        description: e?.message || 'Tente novamente em instantes.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSyncing(false);
+    }
+  };
 
   // Fetch all profiles (admin only)
   const { data: profiles = [], isLoading } = useQuery({
