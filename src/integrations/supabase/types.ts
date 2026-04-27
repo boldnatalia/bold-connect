@@ -44,6 +44,51 @@ export type Database = {
         }
         Relationships: []
       }
+      customers: {
+        Row: {
+          conexa_id: number
+          created_at: string
+          document: string | null
+          email: string | null
+          id: string
+          is_active: boolean
+          name: string
+          phone: string | null
+          raw: Json | null
+          synced_at: string
+          trade_name: string | null
+          updated_at: string
+        }
+        Insert: {
+          conexa_id: number
+          created_at?: string
+          document?: string | null
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          phone?: string | null
+          raw?: Json | null
+          synced_at?: string
+          trade_name?: string | null
+          updated_at?: string
+        }
+        Update: {
+          conexa_id?: number
+          created_at?: string
+          document?: string | null
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          phone?: string | null
+          raw?: Json | null
+          synced_at?: string
+          trade_name?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       floors: {
         Row: {
           created_at: string | null
@@ -179,10 +224,67 @@ export type Database = {
         }
         Relationships: []
       }
+      persons: {
+        Row: {
+          conexa_id: number
+          created_at: string
+          customer_conexa_id: number | null
+          customer_id: string | null
+          document: string | null
+          emails: string[] | null
+          id: string
+          is_active: boolean
+          name: string
+          phone: string | null
+          raw: Json | null
+          synced_at: string
+          updated_at: string
+        }
+        Insert: {
+          conexa_id: number
+          created_at?: string
+          customer_conexa_id?: number | null
+          customer_id?: string | null
+          document?: string | null
+          emails?: string[] | null
+          id?: string
+          is_active?: boolean
+          name: string
+          phone?: string | null
+          raw?: Json | null
+          synced_at?: string
+          updated_at?: string
+        }
+        Update: {
+          conexa_id?: number
+          created_at?: string
+          customer_conexa_id?: number | null
+          customer_id?: string | null
+          document?: string | null
+          emails?: string[] | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          phone?: string | null
+          raw?: Json | null
+          synced_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "persons_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
           company: string
+          conexa_customer_id: string | null
           cpf: string
           created_at: string | null
           floor_id: string | null
@@ -196,6 +298,7 @@ export type Database = {
         Insert: {
           avatar_url?: string | null
           company: string
+          conexa_customer_id?: string | null
           cpf: string
           created_at?: string | null
           floor_id?: string | null
@@ -209,6 +312,7 @@ export type Database = {
         Update: {
           avatar_url?: string | null
           company?: string
+          conexa_customer_id?: string | null
           cpf?: string
           created_at?: string | null
           floor_id?: string | null
@@ -220,6 +324,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "profiles_conexa_customer_id_fkey"
+            columns: ["conexa_customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "profiles_floor_id_fkey"
             columns: ["floor_id"]
