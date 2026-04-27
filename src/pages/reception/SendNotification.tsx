@@ -80,11 +80,11 @@ export default function SendNotification() {
     return activeClients
       .filter(p =>
         p.full_name.toLowerCase().includes(q) ||
-        (p.company || '').toLowerCase().includes(q) ||
+        companyOf(p).toLowerCase().includes(q) ||
         (p.room || '').toLowerCase().includes(q)
       )
       .slice(0, 6);
-  }, [recipientQuery, activeClients]);
+  }, [recipientQuery, activeClients, customerById]);
 
   const requiresClientResponse = selectedMessageData?.has_input_field && selectedMessageData.category === 'Códigos';
   const needsReceptionInput = selectedMessageData?.has_input_field && !requiresClientResponse;
