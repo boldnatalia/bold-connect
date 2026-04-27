@@ -621,6 +621,7 @@ export default function AdminUsers() {
                                     ...formData,
                                     conexa_customer_id: c.id,
                                     company: c.trade_name || c.name,
+                                    conexa_person_id: '',
                                   });
                                   setCompanyPickerOpen(false);
                                 }}
@@ -916,6 +917,7 @@ export default function AdminUsers() {
                                   ...editFormData,
                                   conexa_customer_id: c.id,
                                   company: c.trade_name || c.name,
+                                  conexa_person_id: '',
                                 });
                                 setEditCompanyPickerOpen(false);
                               }}
