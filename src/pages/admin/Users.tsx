@@ -47,6 +47,7 @@ import { Plus, Loader2, Search, UserPlus, MoreVertical, UserX, UserCheck, Trash2
 import type { Profile } from '@/types';
 import { z } from 'zod';
 import { useCustomers } from '@/hooks/useCustomers';
+import { usePersonsByCustomer } from '@/hooks/usePersons';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { cn } from '@/lib/utils';
@@ -60,6 +61,7 @@ const userSchema = z.object({
   cpf: z.string().regex(/^\d{11}$/, 'CPF deve ter 11 dígitos'),
   company: z.string().min(2, 'Selecione uma empresa'),
   conexa_customer_id: z.string().uuid('Selecione uma empresa do Conexa'),
+  conexa_person_id: z.string().uuid('Selecione a pessoa vinculada').optional().or(z.literal('')),
   floor_id: z.string().uuid('Selecione um andar'),
   room: z.string().min(1, 'Informe a sala'),
 });
@@ -69,6 +71,7 @@ const editUserSchema = z.object({
   cpf: z.string().regex(/^\d{11}$/, 'CPF deve ter 11 dígitos'),
   company: z.string().min(2, 'Selecione uma empresa'),
   conexa_customer_id: z.string().uuid('Selecione uma empresa do Conexa').optional().or(z.literal('')),
+  conexa_person_id: z.string().uuid().optional().or(z.literal('')),
   floor_id: z.string().uuid('Selecione um andar'),
   room: z.string().min(1, 'Informe a sala'),
 });
@@ -101,6 +104,7 @@ export default function AdminUsers() {
     cpf: '',
     company: '',
     conexa_customer_id: '',
+    conexa_person_id: '',
     floor_id: '',
     room: '',
   });
@@ -110,9 +114,16 @@ export default function AdminUsers() {
     cpf: '',
     company: '',
     conexa_customer_id: '',
+    conexa_person_id: '',
     floor_id: '',
     room: '',
   });
+
+  // Persons available for the selected customer (create form)
+  const { persons: createPersons } = usePersonsByCustomer(formData.conexa_customer_id);
+  const { persons: editPersons } = usePersonsByCustomer(editFormData.conexa_customer_id);
+  const [personPickerOpen, setPersonPickerOpen] = useState(false);
+  const [editPersonPickerOpen, setEditPersonPickerOpen] = useState(false);
 
   const handleSyncConexa = async () => {
     setIsSyncing(true);
