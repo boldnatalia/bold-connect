@@ -207,9 +207,10 @@ export default function AdminUsers() {
       });
 
       if (authError) throw authError;
-      if (!authData?.user?.id) throw new Error('Erro ao criar usuário');
+      if ((authData as any)?.error) throw new Error((authData as any).error);
+      if (!authData?.user?.id) throw new Error('Erro ao criar usuário (sem ID retornado)');
 
-      const { error: profileError } = await supabase.from('profiles').insert({
+      const profilePayload = {
         user_id: authData.user.id,
         full_name: data.full_name,
         cpf: data.cpf,
@@ -218,9 +219,15 @@ export default function AdminUsers() {
         conexa_person_id: data.conexa_person_id || null,
         floor_id: data.floor_id,
         room: data.room,
-      });
+      };
+      console.log('[create-user] inserting profile', profilePayload);
 
-      if (profileError) throw profileError;
+      const { error: profileError } = await supabase.from('profiles').insert(profilePayload);
+
+      if (profileError) {
+        console.error('[create-user] profile insert failed', profileError);
+        throw new Error(`Falha ao salvar perfil: ${profileError.message}`);
+      }
 
       return authData;
     },
