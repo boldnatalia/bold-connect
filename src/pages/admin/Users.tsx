@@ -239,6 +239,7 @@ export default function AdminUsers() {
           full_name: data.full_name,
           cpf: data.cpf,
           company: data.company,
+          conexa_customer_id: data.conexa_customer_id || null,
           floor_id: data.floor_id,
           room: data.room,
         })
@@ -329,6 +330,7 @@ export default function AdminUsers() {
       full_name: '',
       cpf: '',
       company: '',
+      conexa_customer_id: '',
       floor_id: '',
       room: '',
     });
@@ -379,6 +381,7 @@ export default function AdminUsers() {
       full_name: profile.full_name,
       cpf: profile.cpf,
       company: profile.company,
+      conexa_customer_id: (profile as any).conexa_customer_id || '',
       floor_id: profile.floor_id || '',
       room: profile.room,
     });
