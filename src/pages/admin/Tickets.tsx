@@ -305,7 +305,8 @@ export default function AdminTickets() {
                   </div>
                 </CardContent>
               </Card>
-            ))}
+              );
+            })}
           </div>
         ) : (
           <Card>
