@@ -119,9 +119,15 @@ export default function AdminUsers() {
     room: '',
   });
 
-  // Persons available for the selected customer (create form)
-  const { persons: createPersons } = usePersonsByCustomer(formData.conexa_customer_id);
-  const { persons: editPersons } = usePersonsByCustomer(editFormData.conexa_customer_id);
+  // Persons available for the selected customer (create form) - memoized to avoid re-rendering 217 items
+  const { persons: createPersonsRaw } = usePersonsByCustomer(formData.conexa_customer_id);
+  const { persons: editPersonsRaw } = usePersonsByCustomer(editFormData.conexa_customer_id);
+  const createPersons = useMemo(() => createPersonsRaw, [createPersonsRaw]);
+  const editPersons = useMemo(() => editPersonsRaw, [editPersonsRaw]);
+  const sortedCustomers = useMemo(
+    () => [...customers].sort((a, b) => (a.name || '').localeCompare(b.name || '')),
+    [customers]
+  );
   const [personPickerOpen, setPersonPickerOpen] = useState(false);
   const [editPersonPickerOpen, setEditPersonPickerOpen] = useState(false);
 
