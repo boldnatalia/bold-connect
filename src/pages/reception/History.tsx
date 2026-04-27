@@ -41,7 +41,30 @@ const STATUS_STYLES: Record<StatusKind, { label: string; className: string; Icon
 };
 
 export default function ReceptionHistory() {
-  const { notifications, isLoading } = useReceptionNotifications();
+  const { notifications, isLoading, sendNotification } = useReceptionNotifications();
+  const { toast } = useToast();
+  const [resendingId, setResendingId] = useState<string | null>(null);
+
+  const handleResend = async (n: typeof notifications[number]) => {
+    if (!n.message_id) {
+      toast({ title: 'Não é possível reenviar', description: 'Mensagem original indisponível.', variant: 'destructive' });
+      return;
+    }
+    try {
+      setResendingId(n.id);
+      await sendNotification({
+        recipientId: n.recipient_id,
+        messageId: n.message_id,
+        inputValue: n.input_value || undefined,
+        requiresResponse: n.requires_response,
+      });
+      toast({ title: '✓ Reenviado!', description: `Notificação enviada novamente a ${n.recipient?.full_name || 'cliente'}.` });
+    } catch {
+      toast({ title: 'Erro ao reenviar', description: 'Tente novamente.', variant: 'destructive' });
+    } finally {
+      setResendingId(null);
+    }
+  };
 
   if (isLoading) {
     return (
