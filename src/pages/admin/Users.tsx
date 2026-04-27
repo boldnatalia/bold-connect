@@ -47,6 +47,7 @@ import { Plus, Loader2, Search, UserPlus, MoreVertical, UserX, UserCheck, Trash2
 import type { Profile } from '@/types';
 import { z } from 'zod';
 import { useCustomers } from '@/hooks/useCustomers';
+import { usePersonsByCustomer } from '@/hooks/usePersons';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { cn } from '@/lib/utils';
@@ -60,6 +61,7 @@ const userSchema = z.object({
   cpf: z.string().regex(/^\d{11}$/, 'CPF deve ter 11 dígitos'),
   company: z.string().min(2, 'Selecione uma empresa'),
   conexa_customer_id: z.string().uuid('Selecione uma empresa do Conexa'),
+  conexa_person_id: z.string().uuid('Selecione a pessoa vinculada').optional().or(z.literal('')),
   floor_id: z.string().uuid('Selecione um andar'),
   room: z.string().min(1, 'Informe a sala'),
 });
@@ -69,6 +71,7 @@ const editUserSchema = z.object({
   cpf: z.string().regex(/^\d{11}$/, 'CPF deve ter 11 dígitos'),
   company: z.string().min(2, 'Selecione uma empresa'),
   conexa_customer_id: z.string().uuid('Selecione uma empresa do Conexa').optional().or(z.literal('')),
+  conexa_person_id: z.string().uuid().optional().or(z.literal('')),
   floor_id: z.string().uuid('Selecione um andar'),
   room: z.string().min(1, 'Informe a sala'),
 });
@@ -101,6 +104,7 @@ export default function AdminUsers() {
     cpf: '',
     company: '',
     conexa_customer_id: '',
+    conexa_person_id: '',
     floor_id: '',
     room: '',
   });
@@ -110,9 +114,16 @@ export default function AdminUsers() {
     cpf: '',
     company: '',
     conexa_customer_id: '',
+    conexa_person_id: '',
     floor_id: '',
     room: '',
   });
+
+  // Persons available for the selected customer (create form)
+  const { persons: createPersons } = usePersonsByCustomer(formData.conexa_customer_id);
+  const { persons: editPersons } = usePersonsByCustomer(editFormData.conexa_customer_id);
+  const [personPickerOpen, setPersonPickerOpen] = useState(false);
+  const [editPersonPickerOpen, setEditPersonPickerOpen] = useState(false);
 
   const handleSyncConexa = async () => {
     setIsSyncing(true);
@@ -204,6 +215,7 @@ export default function AdminUsers() {
         cpf: data.cpf,
         company: data.company,
         conexa_customer_id: data.conexa_customer_id || null,
+        conexa_person_id: data.conexa_person_id || null,
         floor_id: data.floor_id,
         room: data.room,
       });
@@ -240,6 +252,7 @@ export default function AdminUsers() {
           cpf: data.cpf,
           company: data.company,
           conexa_customer_id: data.conexa_customer_id || null,
+          conexa_person_id: data.conexa_person_id || null,
           floor_id: data.floor_id,
           room: data.room,
         })
@@ -331,6 +344,7 @@ export default function AdminUsers() {
       cpf: '',
       company: '',
       conexa_customer_id: '',
+      conexa_person_id: '',
       floor_id: '',
       room: '',
     });
@@ -382,6 +396,7 @@ export default function AdminUsers() {
       cpf: profile.cpf,
       company: profile.company,
       conexa_customer_id: (profile as any).conexa_customer_id || '',
+      conexa_person_id: (profile as any).conexa_person_id || '',
       floor_id: profile.floor_id || '',
       room: profile.room,
     });
@@ -606,6 +621,7 @@ export default function AdminUsers() {
                                     ...formData,
                                     conexa_customer_id: c.id,
                                     company: c.trade_name || c.name,
+                                    conexa_person_id: '',
                                   });
                                   setCompanyPickerOpen(false);
                                 }}
@@ -628,6 +644,65 @@ export default function AdminUsers() {
                     {customers.length} empresa(s) ativa(s) no Conexa
                   </p>
                 </div>
+
+                {formData.conexa_customer_id && (
+                  <div className="space-y-2">
+                    <Label>Pessoa Vinculada (Conexa) *</Label>
+                    <Popover open={personPickerOpen} onOpenChange={setPersonPickerOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          role="combobox"
+                          className="w-full justify-between font-normal"
+                          disabled={createPersons.length === 0}
+                        >
+                          <span className="truncate">
+                            {formData.conexa_person_id
+                              ? (createPersons.find(p => p.id === formData.conexa_person_id)?.name || 'Pessoa selecionada')
+                              : (createPersons.length === 0 ? 'Nenhuma pessoa para esta empresa' : 'Selecione a pessoa')}
+                          </span>
+                          <ChevronsUpDown className="h-4 w-4 opacity-50 shrink-0 ml-2" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                        <Command>
+                          <CommandInput placeholder="Buscar pessoa..." />
+                          <CommandList>
+                            <CommandEmpty>Nenhuma pessoa encontrada.</CommandEmpty>
+                            <CommandGroup>
+                              {createPersons.map(person => (
+                                <CommandItem
+                                  key={person.id}
+                                  value={`${person.name} ${person.document ?? ''}`}
+                                  onSelect={() => {
+                                    setFormData({
+                                      ...formData,
+                                      conexa_person_id: person.id,
+                                      full_name: formData.full_name || person.name,
+                                    });
+                                    setPersonPickerOpen(false);
+                                  }}
+                                >
+                                  <Check className={cn('mr-2 h-4 w-4', formData.conexa_person_id === person.id ? 'opacity-100' : 'opacity-0')} />
+                                  <div className="min-w-0">
+                                    <p className="text-sm font-medium truncate">{person.name}</p>
+                                    {person.document && (
+                                      <p className="text-xs text-muted-foreground truncate">{person.document}</p>
+                                    )}
+                                  </div>
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                    <p className="text-xs text-muted-foreground">
+                      {createPersons.length} pessoa(s) vinculada(s) a esta empresa
+                    </p>
+                  </div>
+                )}
 
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-2">
@@ -901,6 +976,7 @@ export default function AdminUsers() {
                                   ...editFormData,
                                   conexa_customer_id: c.id,
                                   company: c.trade_name || c.name,
+                                  conexa_person_id: '',
                                 });
                                 setEditCompanyPickerOpen(false);
                               }}
@@ -920,6 +996,61 @@ export default function AdminUsers() {
                   </PopoverContent>
                 </Popover>
               </div>
+
+              {editFormData.conexa_customer_id && (
+                <div className="space-y-2">
+                  <Label>Pessoa Vinculada (Conexa)</Label>
+                  <Popover open={editPersonPickerOpen} onOpenChange={setEditPersonPickerOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        role="combobox"
+                        className="w-full justify-between font-normal"
+                        disabled={editPersons.length === 0}
+                      >
+                        <span className="truncate">
+                          {editFormData.conexa_person_id
+                            ? (editPersons.find(p => p.id === editFormData.conexa_person_id)?.name || 'Pessoa selecionada')
+                            : (editPersons.length === 0 ? 'Nenhuma pessoa para esta empresa' : 'Selecione a pessoa')}
+                        </span>
+                        <ChevronsUpDown className="h-4 w-4 opacity-50 shrink-0 ml-2" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                      <Command>
+                        <CommandInput placeholder="Buscar pessoa..." />
+                        <CommandList>
+                          <CommandEmpty>Nenhuma pessoa encontrada.</CommandEmpty>
+                          <CommandGroup>
+                            {editPersons.map(person => (
+                              <CommandItem
+                                key={person.id}
+                                value={`${person.name} ${person.document ?? ''}`}
+                                onSelect={() => {
+                                  setEditFormData({ ...editFormData, conexa_person_id: person.id });
+                                  setEditPersonPickerOpen(false);
+                                }}
+                              >
+                                <Check className={cn('mr-2 h-4 w-4', editFormData.conexa_person_id === person.id ? 'opacity-100' : 'opacity-0')} />
+                                <div className="min-w-0">
+                                  <p className="text-sm font-medium truncate">{person.name}</p>
+                                  {person.document && (
+                                    <p className="text-xs text-muted-foreground truncate">{person.document}</p>
+                                  )}
+                                </div>
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                  <p className="text-xs text-muted-foreground">
+                    {editPersons.length} pessoa(s) vinculada(s) a esta empresa
+                  </p>
+                </div>
+              )}
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">

@@ -8,6 +8,7 @@ import { useReceptionMessages } from '@/hooks/useReceptionMessages';
 import { useReceptionNotifications } from '@/hooks/useReceptionNotifications';
 import { useProfiles } from '@/hooks/useProfiles';
 import { useCustomers } from '@/hooks/useCustomers';
+import { usePersons } from '@/hooks/usePersons';
 import { useToast } from '@/hooks/use-toast';
 import {
   Send, User, Loader2, Search, Check, X, ArrowLeft,
@@ -49,6 +50,7 @@ export default function SendNotification() {
   const { sendNotification, isSending } = useReceptionNotifications();
   const { profiles, isLoading: profilesLoading } = useProfiles();
   const { customers } = useCustomers();
+  const { persons, isLoading: personsLoading } = usePersons();
   const { toast } = useToast();
 
   const customerById = useMemo(() => {
@@ -62,6 +64,31 @@ export default function SendNotification() {
     const c = cid ? customerById.get(cid) : null;
     return c?.trade_name || c?.name || p?.company || '';
   };
+
+  // Map of profiles keyed by conexa_person_id for instant lookup
+  const profileByPersonId = useMemo(() => {
+    const m = new Map<string, any>();
+    profiles.forEach(p => {
+      const pid = (p as any).conexa_person_id;
+      if (pid && p.is_active) m.set(pid, p);
+    });
+    return m;
+  }, [profiles]);
+
+  // Searchable list: only Conexa persons that have a linked active profile (app user)
+  const searchablePersons = useMemo(() => {
+    return persons
+      .filter(person => profileByPersonId.has(person.id))
+      .map(person => {
+        const profile = profileByPersonId.get(person.id);
+        const customer = person.customer_id ? customerById.get(person.customer_id) : null;
+        return {
+          person,
+          profile,
+          companyName: customer?.trade_name || customer?.name || profile?.company || '',
+        };
+      });
+  }, [persons, profileByPersonId, customerById]);
 
   const [step, setStep] = useState<1 | 2>(1);
   const [recipientQuery, setRecipientQuery] = useState('');
@@ -77,14 +104,13 @@ export default function SendNotification() {
   const filteredClients = useMemo(() => {
     if (!recipientQuery.trim()) return [];
     const q = recipientQuery.toLowerCase();
-    return activeClients
-      .filter(p =>
-        p.full_name.toLowerCase().includes(q) ||
-        companyOf(p).toLowerCase().includes(q) ||
-        (p.room || '').toLowerCase().includes(q)
+    return searchablePersons
+      .filter(({ person, companyName }) =>
+        person.name.toLowerCase().includes(q) ||
+        companyName.toLowerCase().includes(q)
       )
-      .slice(0, 6);
-  }, [recipientQuery, activeClients, customerById]);
+      .slice(0, 8);
+  }, [recipientQuery, searchablePersons]);
 
   const requiresClientResponse = selectedMessageData?.has_input_field && selectedMessageData.category === 'Códigos';
   const needsReceptionInput = selectedMessageData?.has_input_field && !requiresClientResponse;
@@ -125,7 +151,7 @@ export default function SendNotification() {
     }
   };
 
-  if (messagesLoading || profilesLoading) {
+  if (messagesLoading || profilesLoading || personsLoading) {
     return (
       <AppLayout title="Nova Notificação" showBack>
         <div className="flex items-center justify-center h-64">
@@ -285,19 +311,19 @@ export default function SendNotification() {
                 {recipientQuery.trim() && (
                   <div className="rounded-xl border border-border/60 overflow-hidden divide-y divide-border/60">
                     {filteredClients.length === 0 ? (
-                      <div className="p-3 text-sm text-muted-foreground text-center">
-                        Nenhum cliente encontrado
+                      <div className="p-4 text-sm text-muted-foreground text-center leading-relaxed">
+                        Nenhum usuário ativo encontrado<br />com este nome
                       </div>
                     ) : (
-                      filteredClients.map(p => (
+                      filteredClients.map(({ person, profile, companyName }) => (
                         <button
-                          key={p.id}
-                          onClick={() => { setSelectedRecipient(p.user_id); setRecipientQuery(''); }}
-                          className="w-full text-left p-3 hover:bg-muted/50 active:bg-muted transition-colors min-h-[44px]"
+                          key={person.id}
+                          onClick={() => { setSelectedRecipient(profile.user_id); setRecipientQuery(''); }}
+                          className="w-full text-left p-3 hover:bg-muted/50 active:bg-muted transition-colors min-h-[52px]"
                         >
-                          <p className="font-medium text-sm">{p.full_name}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {companyOf(p)} · {p.floor?.name || ''} Sala {p.room}
+                          <p className="font-medium text-sm leading-tight">{person.name}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                            {companyName || 'Sem empresa vinculada'}
                           </p>
                         </button>
                       ))

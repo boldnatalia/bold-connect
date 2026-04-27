@@ -285,6 +285,7 @@ export type Database = {
           avatar_url: string | null
           company: string
           conexa_customer_id: string | null
+          conexa_person_id: string | null
           cpf: string
           created_at: string | null
           floor_id: string | null
@@ -299,6 +300,7 @@ export type Database = {
           avatar_url?: string | null
           company: string
           conexa_customer_id?: string | null
+          conexa_person_id?: string | null
           cpf: string
           created_at?: string | null
           floor_id?: string | null
@@ -313,6 +315,7 @@ export type Database = {
           avatar_url?: string | null
           company?: string
           conexa_customer_id?: string | null
+          conexa_person_id?: string | null
           cpf?: string
           created_at?: string | null
           floor_id?: string | null
@@ -329,6 +332,13 @@ export type Database = {
             columns: ["conexa_customer_id"]
             isOneToOne: false
             referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_conexa_person_id_fkey"
+            columns: ["conexa_person_id"]
+            isOneToOne: false
+            referencedRelation: "persons"
             referencedColumns: ["id"]
           },
           {
