@@ -12,8 +12,9 @@ async function fetchAllPages(path: string, token: string) {
   const all: any[] = [];
   let offset = 0;
   const limit = 100;
+  let pageNum = 0;
   while (true) {
-    const url = `${CONEXA_BASE_URL}/${path}?limit=${limit}&offset=${offset}&active=1`;
+    const url = `${CONEXA_BASE_URL}/${path}?limit=${limit}&offset=${offset}`;
     const res = await fetch(url, {
       headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
     });
@@ -21,10 +22,20 @@ async function fetchAllPages(path: string, token: string) {
     const json = await res.json();
     const page = json?.data ?? [];
     all.push(...page);
+    pageNum++;
+    console.log(`[conexa-sync] ${path} página ${pageNum} (offset=${offset}): ${page.length} registros`);
     if (!json?.pagination?.hasNext || page.length === 0) break;
     offset += limit;
   }
+  console.log(`[conexa-sync] ${path} TOTAL recebido: ${all.length} registros`);
   return all;
+}
+
+function isActive(item: any): boolean {
+  // Conexa pode usar várias formas; consideramos ativo por padrão se não houver flag explícita falsa
+  if (item == null) return false;
+  if (item.active === 0 || item.active === false || item.isActive === false || item.status === 'inactive') return false;
+  return true;
 }
 
 serve(async (req) => {
@@ -80,10 +91,12 @@ serve(async (req) => {
       document: c.document ?? c.cpfCnpj ?? c.cnpj ?? null,
       email: Array.isArray(c.emails) ? c.emails[0] : (c.email ?? null),
       phone: Array.isArray(c.phones) ? c.phones[0] : (c.phone ?? null),
-      is_active: c.active === 1 || c.active === true || c.isActive === true || true,
+      is_active: isActive(c),
       raw: c,
       synced_at: new Date().toISOString(),
     })).filter((r: any) => r.conexa_id != null);
+
+    console.log(`[conexa-sync] customers a salvar: ${customerRows.length} (ativos: ${customerRows.filter((r: any) => r.is_active).length})`);
 
     if (customerRows.length > 0) {
       const { error } = await supabaseAdmin
@@ -112,11 +125,13 @@ serve(async (req) => {
         emails: Array.isArray(p.emails) ? p.emails.map((e: string) => String(e).toLowerCase()) : [],
         phone: Array.isArray(p.phones) ? p.phones[0] : (p.phone ?? null),
         document: p.cpf ?? p.document ?? null,
-        is_active: p.active === 1 || p.active === true || p.isActive === true || true,
+        is_active: isActive(p),
         raw: p,
         synced_at: new Date().toISOString(),
       };
     }).filter((r: any) => r.conexa_id != null);
+
+    console.log(`[conexa-sync] persons a salvar: ${personRows.length} (ativos: ${personRows.filter((r: any) => r.is_active).length})`);
 
     if (personRows.length > 0) {
       // Chunked upsert to avoid payload limits
