@@ -25,24 +25,35 @@ export function useTickets() {
         throw error;
       }
       
-      // Fetch profile data separately for each ticket
-      const ticketsWithProfiles = await Promise.all(
+      // Fetch profile + latest admin comment timestamp per ticket
+      const ticketsEnriched = await Promise.all(
         (data || []).map(async (ticket) => {
-          const { data: profileData, error: profileError } = await supabase
-            .from('profiles')
-            .select('full_name, company, room, floor:floors(name)')
-            .eq('user_id', ticket.user_id)
-            .single();
-          if (profileError) console.error('[useTickets] Erro ao buscar perfil:', profileError);
-          
+          const [{ data: profileData }, { data: lastAdminComment }] = await Promise.all([
+            supabase
+              .from('profiles')
+              .select('full_name, company, room, floor:floors(name)')
+              .eq('user_id', ticket.user_id)
+              .single(),
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (supabase as any)
+              .from('ticket_comments')
+              .select('created_at')
+              .eq('ticket_id', ticket.id)
+              .eq('is_admin', true)
+              .order('created_at', { ascending: false })
+              .limit(1)
+              .maybeSingle(),
+          ]);
+
           return {
             ...ticket,
-            profile: profileData
+            profile: profileData,
+            last_admin_comment_at: lastAdminComment?.created_at ?? null,
           };
         })
       );
-      
-      return ticketsWithProfiles as unknown as Ticket[];
+
+      return ticketsEnriched as unknown as Ticket[];
     },
     enabled: !!user,
   });

@@ -90,6 +90,7 @@ export interface Ticket {
   updated_at: string;
   profile?: Profile;
   comments?: TicketComment[];
+  last_admin_comment_at?: string | null;
 }
 
 export interface Announcement {
