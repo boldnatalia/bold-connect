@@ -47,7 +47,7 @@ import { Plus, Loader2, Search, UserPlus, MoreVertical, UserX, UserCheck, Trash2
 import type { Profile } from '@/types';
 import { z } from 'zod';
 import { useCustomers } from '@/hooks/useCustomers';
-import { usePersonsByCustomer } from '@/hooks/usePersons';
+import { usePersonsByCustomer, extractPersonCpf } from '@/hooks/usePersons';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { cn } from '@/lib/utils';
