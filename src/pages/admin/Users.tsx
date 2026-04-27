@@ -488,6 +488,20 @@ export default function AdminUsers() {
             )}
           </div>
 
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleSyncConexa}
+            disabled={isSyncing}
+            className="w-full border-primary/40 text-primary hover:bg-primary/10 hover:text-primary"
+          >
+            {isSyncing ? (
+              <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Sincronizando base Conexa...</>
+            ) : (
+              <><RefreshCw className="mr-2 h-4 w-4" />Sincronizar Base Conexa</>
+            )}
+          </Button>
+
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
             <DialogTrigger asChild>
               <Button className="w-full" onClick={() => { resetForm(); setIsCreateDialogOpen(true); }}>
