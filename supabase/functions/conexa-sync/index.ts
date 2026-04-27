@@ -82,74 +82,104 @@ serve(async (req) => {
     const conexaToken = Deno.env.get("CONEXA_API_TOKEN");
     if (!conexaToken) throw new Error("Token Conexa não configurado.");
 
-    // 1. Customers
-    const customers = await fetchAllPages("customers", conexaToken);
-    const customerRows = customers.map((c: any) => ({
-      conexa_id: c.id ?? c.customerId,
-      name: c.name ?? c.corporateName ?? c.razaoSocial ?? "",
-      trade_name: c.tradeName ?? c.fantasyName ?? c.fantasia ?? null,
-      document: c.document ?? c.cpfCnpj ?? c.cnpj ?? null,
-      email: Array.isArray(c.emails) ? c.emails[0] : (c.email ?? null),
-      phone: Array.isArray(c.phones) ? c.phones[0] : (c.phone ?? null),
-      is_active: isActive(c),
-      raw: c,
-      synced_at: new Date().toISOString(),
-    })).filter((r: any) => r.conexa_id != null);
+    // 1. Customers — protegido por try/catch dedicado
+    let customerRows: any[] = [];
+    try {
+      const customers = await fetchAllPages("customers", conexaToken);
+      customerRows = customers.map((c: any) => {
+        try {
+          return {
+            conexa_id: c?.id ?? c?.customerId ?? null,
+            name: c?.name ?? c?.corporateName ?? c?.razaoSocial ?? "",
+            trade_name: c?.tradeName ?? c?.fantasyName ?? c?.fantasia ?? null,
+            document: c?.document ?? c?.cpfCnpj ?? c?.cnpj ?? null,
+            email: Array.isArray(c?.emails) ? c.emails[0] : (c?.email ?? null),
+            phone: Array.isArray(c?.phones) ? c.phones[0] : (c?.phone ?? null),
+            is_active: isActive(c),
+            raw: c,
+            synced_at: new Date().toISOString(),
+          };
+        } catch (mapErr) {
+          console.warn("[conexa-sync] falha ao mapear customer, ignorando registro:", mapErr, c);
+          return null;
+        }
+      }).filter((r: any) => r && r.conexa_id != null);
 
-    console.log(`[conexa-sync] customers a salvar: ${customerRows.length} (ativos: ${customerRows.filter((r: any) => r.is_active).length})`);
+      console.log(`[conexa-sync] customers a salvar: ${customerRows.length} (ativos: ${customerRows.filter((r: any) => r.is_active).length})`);
 
-    if (customerRows.length > 0) {
-      const { error } = await supabaseAdmin
-        .from("customers")
-        .upsert(customerRows, { onConflict: "conexa_id" });
-      if (error) throw new Error(`Upsert customers: ${error.message}`);
+      if (customerRows.length > 0) {
+        const { error } = await supabaseAdmin
+          .from("customers")
+          .upsert(customerRows, { onConflict: "conexa_id" });
+        if (error) throw new Error(`Upsert customers: ${error.message}`);
+      }
+    } catch (err) {
+      throw new Error(`Etapa 'customers' falhou: ${err instanceof Error ? err.message : String(err)}`);
     }
 
     // Map conexa_id -> customers.id
-    const { data: customerMap } = await supabaseAdmin
-      .from("customers")
-      .select("id, conexa_id");
     const idMap = new Map<number, string>();
-    customerMap?.forEach((c: any) => idMap.set(Number(c.conexa_id), c.id));
-
-    // 2. Persons
-    const persons = await fetchAllPages("persons", conexaToken);
-    const personRows = persons.map((p: any) => {
-      const conexaId = p.id ?? p.personId;
-      const custConexaId = p.customerId ?? p.customer_id ?? null;
-      return {
-        conexa_id: conexaId,
-        customer_conexa_id: custConexaId,
-        customer_id: custConexaId ? (idMap.get(Number(custConexaId)) ?? null) : null,
-        name: p.name ?? "",
-        emails: Array.isArray(p.emails) ? p.emails.map((e: string) => String(e).toLowerCase()) : [],
-        phone: Array.isArray(p.phones) ? p.phones[0] : (p.phone ?? null),
-        document: p.cpf ?? p.document ?? null,
-        is_active: isActive(p),
-        raw: p,
-        synced_at: new Date().toISOString(),
-      };
-    }).filter((r: any) => r.conexa_id != null);
-
-    console.log(`[conexa-sync] persons a salvar: ${personRows.length} (ativos: ${personRows.filter((r: any) => r.is_active).length})`);
-
-    if (personRows.length > 0) {
-      // Chunked upsert to avoid payload limits
-      const chunkSize = 500;
-      for (let i = 0; i < personRows.length; i += chunkSize) {
-        const chunk = personRows.slice(i, i + chunkSize);
-        const { error } = await supabaseAdmin
-          .from("persons")
-          .upsert(chunk, { onConflict: "conexa_id" });
-        if (error) throw new Error(`Upsert persons: ${error.message}`);
-      }
+    try {
+      const { data: customerMap, error: mapErr } = await supabaseAdmin
+        .from("customers")
+        .select("id, conexa_id");
+      if (mapErr) throw mapErr;
+      customerMap?.forEach((c: any) => idMap.set(Number(c.conexa_id), c.id));
+    } catch (err) {
+      throw new Error(`Falha ao mapear customers locais: ${err instanceof Error ? err.message : String(err)}`);
     }
+
+    // 2. Persons — protegido por try/catch dedicado
+    let personRows: any[] = [];
+    try {
+      const persons = await fetchAllPages("persons", conexaToken);
+      personRows = persons.map((p: any) => {
+        try {
+          const conexaId = p?.id ?? p?.personId ?? null;
+          const custConexaId = p?.customerId ?? p?.customer_id ?? null;
+          return {
+            conexa_id: conexaId,
+            customer_conexa_id: custConexaId,
+            customer_id: custConexaId ? (idMap.get(Number(custConexaId)) ?? null) : null,
+            name: p?.name ?? "",
+            emails: Array.isArray(p?.emails) ? p.emails.map((e: string) => String(e).toLowerCase()) : [],
+            phone: Array.isArray(p?.phones) ? p.phones[0] : (p?.phone ?? null),
+            document: p?.cpf ?? p?.document ?? null,
+            is_active: isActive(p),
+            raw: p,
+            synced_at: new Date().toISOString(),
+          };
+        } catch (mapErr) {
+          console.warn("[conexa-sync] falha ao mapear person, ignorando registro:", mapErr, p);
+          return null;
+        }
+      }).filter((r: any) => r && r.conexa_id != null);
+
+      console.log(`[conexa-sync] persons a salvar: ${personRows.length} (ativos: ${personRows.filter((r: any) => r.is_active).length})`);
+
+      if (personRows.length > 0) {
+        const chunkSize = 500;
+        for (let i = 0; i < personRows.length; i += chunkSize) {
+          const chunk = personRows.slice(i, i + chunkSize);
+          const { error } = await supabaseAdmin
+            .from("persons")
+            .upsert(chunk, { onConflict: "conexa_id" });
+          if (error) throw new Error(`Upsert persons (chunk ${i}): ${error.message}`);
+        }
+      }
+    } catch (err) {
+      throw new Error(`Etapa 'persons' falhou: ${err instanceof Error ? err.message : String(err)}`);
+    }
+
+    // Reatribuir nomes para o response final
+    const finalCustomersCount = customerRows.length;
+    const finalPersonsCount = personRows.length;
 
     return new Response(
       JSON.stringify({
         success: true,
-        customers: customerRows.length,
-        persons: personRows.length,
+        customers: finalCustomersCount,
+        persons: finalPersonsCount,
         synced_at: new Date().toISOString(),
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
