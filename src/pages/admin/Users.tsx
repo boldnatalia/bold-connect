@@ -561,28 +561,6 @@ export default function AdminUsers() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="full_name">Nome Completo *</Label>
-                  <Input
-                    id="full_name"
-                    placeholder="João da Silva"
-                    value={formData.full_name}
-                    onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="cpf">CPF *</Label>
-                  <Input
-                    id="cpf"
-                    placeholder="00000000000"
-                    value={formData.cpf}
-                    onChange={(e) => setFormData({ ...formData, cpf: formatCPF(e.target.value) })}
-                    maxLength={11}
-                  />
-                  <p className="text-xs text-muted-foreground">Apenas números</p>
-                </div>
-
-                <div className="space-y-2">
                   <Label>Empresa (Conexa) *</Label>
                   <Popover open={companyPickerOpen} onOpenChange={setCompanyPickerOpen}>
                     <PopoverTrigger asChild>
@@ -622,6 +600,8 @@ export default function AdminUsers() {
                                     conexa_customer_id: c.id,
                                     company: c.trade_name || c.name,
                                     conexa_person_id: '',
+                                    full_name: '',
+                                    cpf: '',
                                   });
                                   setCompanyPickerOpen(false);
                                 }}
@@ -676,10 +656,12 @@ export default function AdminUsers() {
                                   key={person.id}
                                   value={`${person.name} ${person.document ?? ''}`}
                                   onSelect={() => {
+                                    const autoCpf = extractPersonCpf(person);
                                     setFormData({
                                       ...formData,
                                       conexa_person_id: person.id,
-                                      full_name: formData.full_name || person.name,
+                                      full_name: person.name,
+                                      cpf: autoCpf || formData.cpf,
                                     });
                                     setPersonPickerOpen(false);
                                   }}
@@ -703,6 +685,35 @@ export default function AdminUsers() {
                     </p>
                   </div>
                 )}
+
+                {formData.conexa_person_id && (
+                  <div className="space-y-2">
+                    <Label htmlFor="full_name_display">Nome Completo</Label>
+                    <Input
+                      id="full_name_display"
+                      value={formData.full_name}
+                      readOnly
+                      className="bg-muted/50"
+                    />
+                    <p className="text-xs text-muted-foreground">Preenchido automaticamente da Pessoa selecionada.</p>
+                  </div>
+                )}
+
+                <div className="space-y-2">
+                  <Label htmlFor="cpf">CPF *</Label>
+                  <Input
+                    id="cpf"
+                    placeholder="00000000000"
+                    value={formData.cpf}
+                    onChange={(e) => setFormData({ ...formData, cpf: formatCPF(e.target.value) })}
+                    maxLength={11}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    {formData.conexa_person_id && formData.cpf
+                      ? 'CPF importado do Conexa. Edite se necessário.'
+                      : 'Apenas números (11 dígitos).'}
+                  </p>
+                </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-2">
