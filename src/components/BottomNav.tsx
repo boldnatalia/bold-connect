@@ -16,7 +16,8 @@ import {
   LogOut,
   Send,
   History,
-  ConciergeBell
+  ConciergeBell,
+  Layers
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -30,6 +31,7 @@ const clientNavItems: NavItem[] = [
   { icon: Home, label: 'Início', href: '/' },
   { icon: ConciergeBell, label: 'Chamados', href: '/tickets' },
   { icon: CalendarCheck, label: 'Reservas', href: '/reserva-salas' },
+  { icon: Layers, label: 'Andares', href: '/floors' },
   { icon: User, label: 'Perfil', href: '/profile' },
 ];
 
