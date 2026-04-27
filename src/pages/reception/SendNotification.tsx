@@ -8,6 +8,7 @@ import { useReceptionMessages } from '@/hooks/useReceptionMessages';
 import { useReceptionNotifications } from '@/hooks/useReceptionNotifications';
 import { useProfiles } from '@/hooks/useProfiles';
 import { useCustomers } from '@/hooks/useCustomers';
+import { usePersons } from '@/hooks/usePersons';
 import { useToast } from '@/hooks/use-toast';
 import {
   Send, User, Loader2, Search, Check, X, ArrowLeft,
@@ -49,6 +50,7 @@ export default function SendNotification() {
   const { sendNotification, isSending } = useReceptionNotifications();
   const { profiles, isLoading: profilesLoading } = useProfiles();
   const { customers } = useCustomers();
+  const { persons, isLoading: personsLoading } = usePersons();
   const { toast } = useToast();
 
   const customerById = useMemo(() => {
@@ -62,6 +64,31 @@ export default function SendNotification() {
     const c = cid ? customerById.get(cid) : null;
     return c?.trade_name || c?.name || p?.company || '';
   };
+
+  // Map of profiles keyed by conexa_person_id for instant lookup
+  const profileByPersonId = useMemo(() => {
+    const m = new Map<string, any>();
+    profiles.forEach(p => {
+      const pid = (p as any).conexa_person_id;
+      if (pid && p.is_active) m.set(pid, p);
+    });
+    return m;
+  }, [profiles]);
+
+  // Searchable list: only Conexa persons that have a linked active profile (app user)
+  const searchablePersons = useMemo(() => {
+    return persons
+      .filter(person => profileByPersonId.has(person.id))
+      .map(person => {
+        const profile = profileByPersonId.get(person.id);
+        const customer = person.customer_id ? customerById.get(person.customer_id) : null;
+        return {
+          person,
+          profile,
+          companyName: customer?.trade_name || customer?.name || profile?.company || '',
+        };
+      });
+  }, [persons, profileByPersonId, customerById]);
 
   const [step, setStep] = useState<1 | 2>(1);
   const [recipientQuery, setRecipientQuery] = useState('');
