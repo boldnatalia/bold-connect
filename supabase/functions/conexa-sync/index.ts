@@ -91,10 +91,12 @@ serve(async (req) => {
       document: c.document ?? c.cpfCnpj ?? c.cnpj ?? null,
       email: Array.isArray(c.emails) ? c.emails[0] : (c.email ?? null),
       phone: Array.isArray(c.phones) ? c.phones[0] : (c.phone ?? null),
-      is_active: c.active === 1 || c.active === true || c.isActive === true || true,
+      is_active: isActive(c),
       raw: c,
       synced_at: new Date().toISOString(),
     })).filter((r: any) => r.conexa_id != null);
+
+    console.log(`[conexa-sync] customers a salvar: ${customerRows.length} (ativos: ${customerRows.filter((r: any) => r.is_active).length})`);
 
     if (customerRows.length > 0) {
       const { error } = await supabaseAdmin
@@ -123,11 +125,13 @@ serve(async (req) => {
         emails: Array.isArray(p.emails) ? p.emails.map((e: string) => String(e).toLowerCase()) : [],
         phone: Array.isArray(p.phones) ? p.phones[0] : (p.phone ?? null),
         document: p.cpf ?? p.document ?? null,
-        is_active: p.active === 1 || p.active === true || p.isActive === true || true,
+        is_active: isActive(p),
         raw: p,
         synced_at: new Date().toISOString(),
       };
     }).filter((r: any) => r.conexa_id != null);
+
+    console.log(`[conexa-sync] persons a salvar: ${personRows.length} (ativos: ${personRows.filter((r: any) => r.is_active).length})`);
 
     if (personRows.length > 0) {
       // Chunked upsert to avoid payload limits
