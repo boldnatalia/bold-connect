@@ -131,7 +131,7 @@ export default function SendNotification() {
     );
 
     return (
-      <AppLayout title="Confirmar Envio" showBack onBack={() => setStep(1)}>
+      <AppLayout title="Confirmar Envio">
         <div className="min-h-[calc(100dvh-56px)] bg-[#F8F9FA] dark:bg-muted/30">
           <div className="p-4 pb-32 space-y-4">
             <button
