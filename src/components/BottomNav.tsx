@@ -30,7 +30,6 @@ interface NavItem {
 const clientNavItems: NavItem[] = [
   { icon: Home, label: 'Início', href: '/' },
   { icon: ConciergeBell, label: 'Chamados', href: '/tickets' },
-  { icon: CalendarCheck, label: 'Reservas', href: '/reserva-salas' },
   { icon: Layers, label: 'Andares', href: '/floors' },
   { icon: User, label: 'Perfil', href: '/profile' },
 ];
