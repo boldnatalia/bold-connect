@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { AdminLayout } from '@/components/AdminLayout';
 import { useTickets } from '@/hooks/useTickets';
 import { useTicketComments } from '@/hooks/useTicketComments';
+import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -20,68 +21,103 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
-import { Clock, Search, Loader2, User, Building, MapPin, Send, MessageCircle } from 'lucide-react';
+import { Clock, Search, Loader2, User, Building, MapPin, Send, Settings2, MessageCircle } from 'lucide-react';
 import { formatDistanceToNow, format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { TICKET_STATUS_LABELS, TicketStatus, Ticket } from '@/types';
 import { cn } from '@/lib/utils';
+import { hasUnreadClientUpdate, markTicketSeenByAdmin } from '@/lib/ticketSeen';
 
-function TicketCommentsSection({ ticketId }: { ticketId: string }) {
+function isSystemMessage(content: string) {
+  return /^\s*(status alterado|sistema:|status:)/i.test(content);
+}
+
+function TicketChatSection({ ticketId, clientName }: { ticketId: string; clientName: string }) {
+  const { user } = useAuth();
   const { comments, isLoading, addComment, isAdding } = useTicketComments(ticketId);
   const [newComment, setNewComment] = useState('');
+  const endRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    endRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [comments]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newComment.trim() || newComment.length > 50) return;
-    
-    addComment(newComment.trim(), {
-      onSuccess: () => setNewComment(''),
-    });
+    addComment(newComment.trim(), { onSuccess: () => setNewComment('') });
   };
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center gap-2 text-sm font-medium">
-        <MessageCircle className="h-4 w-4" />
-        <span>Atualizações</span>
-      </div>
-
-      {/* Comments list */}
-      <div className="max-h-48 overflow-y-auto space-y-2">
+      {/* Comments list - chat style */}
+      <div className="max-h-72 overflow-y-auto space-y-3 pr-1">
         {isLoading ? (
           <div className="flex justify-center py-2">
             <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
           </div>
         ) : comments.length === 0 ? (
-          <p className="text-xs text-muted-foreground text-center py-2">
-            Nenhuma atualização
+          <p className="text-xs text-muted-foreground text-center py-4">
+            Nenhuma mensagem trocada ainda
           </p>
         ) : (
-          comments.map((comment) => (
-            <div
-              key={comment.id}
-              className={cn(
-                'p-2 rounded-lg text-sm',
-                comment.is_admin
-                  ? 'bg-primary/10 border border-primary/20'
-                  : 'bg-muted'
-              )}
-            >
-              <p>{comment.content}</p>
-              <p className="text-[10px] text-muted-foreground mt-1">
-                {comment.is_admin ? 'Admin • ' : 'Cliente • '}
-                {format(new Date(comment.created_at), "dd/MM 'às' HH:mm", { locale: ptBR })}
-              </p>
-            </div>
-          ))
+          comments.map((comment) => {
+            const system = comment.is_admin && isSystemMessage(comment.content);
+            const isMine = comment.is_admin && comment.user_id === user?.id;
+            const isAdminOther = comment.is_admin && !isMine && !system;
+            const isClient = !comment.is_admin;
+            const senderName = comment.is_admin ? 'Administração' : clientName;
+
+            if (system) {
+              return (
+                <div key={comment.id} className="text-[11px] text-muted-foreground flex items-center justify-center gap-1.5 italic py-1">
+                  <Settings2 className="h-3 w-3" />
+                  <span>{comment.content}</span>
+                  <span className="text-muted-foreground/70">
+                    • {format(new Date(comment.created_at), "dd/MM HH:mm", { locale: ptBR })}
+                  </span>
+                </div>
+              );
+            }
+
+            if (isClient) {
+              return (
+                <div key={comment.id} className="max-w-[85%]">
+                  <p className="text-[10px] font-medium text-muted-foreground mb-1 px-1">{senderName}</p>
+                  <div className="bg-muted text-foreground rounded-2xl rounded-tl-sm px-3 py-2">
+                    <p className="text-sm leading-relaxed">{comment.content}</p>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground mt-1 px-1">
+                    {format(new Date(comment.created_at), "dd/MM 'às' HH:mm", { locale: ptBR })}
+                  </p>
+                </div>
+              );
+            }
+
+            // Admin (mine or other admin) → right aligned with gold tint
+            return (
+              <div key={comment.id} className="max-w-[85%] ml-auto text-right">
+                <p className="text-[10px] font-medium text-primary mb-1 px-1">
+                  {isAdminOther ? 'Administração' : 'Você'}
+                </p>
+                <div className="inline-block bg-primary/15 border border-primary/20 text-foreground rounded-2xl rounded-tr-sm px-3 py-2 text-left">
+                  <p className="text-sm leading-relaxed">{comment.content}</p>
+                </div>
+                <p className="text-[10px] text-muted-foreground mt-1 px-1">
+                  {format(new Date(comment.created_at), "dd/MM 'às' HH:mm", { locale: ptBR })}
+                </p>
+              </div>
+            );
+          })
         )}
+        <div ref={endRef} />
       </div>
 
       {/* Add comment form */}
-      <form onSubmit={handleSubmit} className="flex gap-2">
+      <form onSubmit={handleSubmit} className="flex gap-2 pt-2 border-t">
         <div className="flex-1 relative">
           <Input
-            placeholder="Adicionar atualização..."
+            placeholder="Responder ao cliente..."
             value={newComment}
             onChange={(e) => setNewComment(e.target.value.slice(0, 50))}
             maxLength={50}
@@ -91,17 +127,13 @@ function TicketCommentsSection({ ticketId }: { ticketId: string }) {
             {newComment.length}/50
           </span>
         </div>
-        <Button 
-          type="submit" 
+        <Button
+          type="submit"
           size="icon"
           disabled={!newComment.trim() || isAdding}
           className="shrink-0 h-10 w-10"
         >
-          {isAdding ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Send className="h-4 w-4" />
-          )}
+          {isAdding ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
         </Button>
       </form>
     </div>
@@ -138,6 +170,7 @@ export default function AdminTickets() {
 
   const openTicketDetails = (ticket: Ticket) => {
     setSelectedTicket(ticket);
+    markTicketSeenByAdmin(ticket.id);
   };
 
   return (
@@ -186,22 +219,35 @@ export default function AdminTickets() {
           </div>
         ) : filteredTickets.length > 0 ? (
           <div className="space-y-3">
-            {filteredTickets.map((ticket) => (
+            {filteredTickets.map((ticket) => {
+              const hasNew = hasUnreadClientUpdate(ticket.id, ticket.last_client_comment_at);
+              return (
               <Card 
                 key={ticket.id} 
-                className="active:scale-[0.99] transition-transform"
+                className={cn(
+                  "active:scale-[0.99] transition-transform",
+                  hasNew && "ring-2 ring-destructive/60"
+                )}
                 onClick={() => openTicketDetails(ticket)}
               >
                 <CardContent className="p-4">
                   <div className="space-y-3">
                     {/* Status and time */}
                     <div className="flex items-center justify-between gap-2">
-                      <Badge 
-                        variant="outline" 
-                        className={cn('text-xs', getStatusClass(ticket.status))}
-                      >
-                        {TICKET_STATUS_LABELS[ticket.status]}
-                      </Badge>
+                      <div className="flex items-center gap-2">
+                        <Badge 
+                          variant="outline" 
+                          className={cn('text-xs', getStatusClass(ticket.status))}
+                        >
+                          {TICKET_STATUS_LABELS[ticket.status]}
+                        </Badge>
+                        {hasNew && (
+                          <Badge variant="destructive" className="text-[10px] gap-1 px-2 py-0.5 animate-pulse">
+                            <MessageCircle className="h-3 w-3" />
+                            Nova mensagem
+                          </Badge>
+                        )}
+                      </div>
                       <span className="text-xs text-muted-foreground flex items-center gap-1">
                         <Clock className="h-3 w-3" />
                         {formatDistanceToNow(new Date(ticket.created_at), {
@@ -259,7 +305,8 @@ export default function AdminTickets() {
                   </div>
                 </CardContent>
               </Card>
-            ))}
+              );
+            })}
           </div>
         ) : (
           <Card>
@@ -307,14 +354,21 @@ export default function AdminTickets() {
                   </div>
                 )}
 
-                {/* Gestão do Chamado */}
-                <section className="space-y-4 pt-2">
-                  <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    Gestão do Chamado
-                  </h3>
+                {/* Divisor elegante */}
+                <div className="relative pt-2">
+                  <div className="absolute inset-0 flex items-center" aria-hidden="true">
+                    <div className="w-full border-t border-border/60" />
+                  </div>
+                  <div className="relative flex justify-center">
+                    <span className="bg-background px-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                      Gestão do Chamado
+                    </span>
+                  </div>
+                </div>
 
+                <section className="space-y-5">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Alterar Status</label>
+                    <label className="text-xs font-medium text-muted-foreground">Alterar Status</label>
                     <Select
                       value={selectedTicket.status}
                       onValueChange={(value) => {
@@ -333,7 +387,10 @@ export default function AdminTickets() {
                     </Select>
                   </div>
 
-                  <TicketCommentsSection ticketId={selectedTicket.id} />
+                  <TicketChatSection
+                    ticketId={selectedTicket.id}
+                    clientName={selectedTicket.profile?.full_name ?? 'Cliente'}
+                  />
                 </section>
               </div>
             )}
