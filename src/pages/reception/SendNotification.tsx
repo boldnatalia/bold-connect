@@ -167,7 +167,7 @@ export default function SendNotification() {
                     {selectedRecipientData.full_name}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {selectedRecipientData.company} · {selectedRecipientData.floor?.name || ''} Sala {selectedRecipientData.room}
+                    {companyOf(selectedRecipientData)} · {selectedRecipientData.floor?.name || ''} Sala {selectedRecipientData.room}
                   </p>
                 </div>
 
@@ -257,7 +257,7 @@ export default function SendNotification() {
                 <div className="min-w-0">
                   <p className="font-medium text-sm truncate">{selectedRecipientData.full_name}</p>
                   <p className="text-xs text-muted-foreground truncate">
-                    {selectedRecipientData.company} · {selectedRecipientData.floor?.name || ''} Sala {selectedRecipientData.room}
+                    {companyOf(selectedRecipientData)} · {selectedRecipientData.floor?.name || ''} Sala {selectedRecipientData.room}
                   </p>
                 </div>
                 <Button
