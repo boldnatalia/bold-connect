@@ -15,7 +15,7 @@ import {
   CalendarCheck,
   MapPin,
   Megaphone,
-  Building2,
+  Calendar,
   BookOpen,
 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
@@ -173,6 +173,16 @@ export default function Home() {
                 </CardContent>
               </Card>
             </Link>
+            <Link to="/reserva-salas">
+              <Card className="bg-white border-border/60 rounded-2xl shadow-sm active:scale-95 transition-transform">
+                <CardContent className="p-3 flex flex-col items-center justify-center gap-2 h-24">
+                  <div className="p-2 rounded-xl bg-primary/10">
+                    <Calendar className="h-4 w-4 text-primary" />
+                  </div>
+                  <p className="text-xs font-medium text-center leading-tight">Reservas</p>
+                </CardContent>
+              </Card>
+            </Link>
             <Link to="/announcements">
               <Card className="bg-white border-border/60 rounded-2xl shadow-sm active:scale-95 transition-transform">
                 <CardContent className="p-3 flex flex-col items-center justify-center gap-2 h-24">
@@ -180,16 +190,6 @@ export default function Home() {
                     <Megaphone className="h-4 w-4 text-primary" />
                   </div>
                   <p className="text-xs font-medium text-center leading-tight">Ver Avisos</p>
-                </CardContent>
-              </Card>
-            </Link>
-            <Link to="/floors">
-              <Card className="bg-white border-border/60 rounded-2xl shadow-sm active:scale-95 transition-transform">
-                <CardContent className="p-3 flex flex-col items-center justify-center gap-2 h-24">
-                  <div className="p-2 rounded-xl bg-primary/10">
-                    <Building2 className="h-4 w-4 text-primary" />
-                  </div>
-                  <p className="text-xs font-medium text-center leading-tight">Andares</p>
                 </CardContent>
               </Card>
             </Link>
