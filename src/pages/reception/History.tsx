@@ -1,10 +1,12 @@
+import { useState } from 'react';
 import { AppLayout } from '@/components/AppLayout';
 import { Card, CardContent } from '@/components/ui/card';
 import { useReceptionNotifications } from '@/hooks/useReceptionNotifications';
-import { Loader2, CheckCircle2, Clock, Eye, MessageSquare, Quote } from 'lucide-react';
+import { Loader2, CheckCircle2, Clock, Eye, MessageSquare, Quote, RotateCw } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
 
 type StatusKind = 'responded' | 'pending' | 'unread' | 'read';
 
