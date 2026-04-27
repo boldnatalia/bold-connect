@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { useReceptionMessages } from '@/hooks/useReceptionMessages';
 import { useReceptionNotifications } from '@/hooks/useReceptionNotifications';
 import { useProfiles } from '@/hooks/useProfiles';
+import { useCustomers } from '@/hooks/useCustomers';
 import { useToast } from '@/hooks/use-toast';
 import {
   Send, User, Loader2, Search, Check, X, ArrowLeft,
@@ -47,7 +48,20 @@ export default function SendNotification() {
   const { messages, isLoading: messagesLoading } = useReceptionMessages();
   const { sendNotification, isSending } = useReceptionNotifications();
   const { profiles, isLoading: profilesLoading } = useProfiles();
+  const { customers } = useCustomers();
   const { toast } = useToast();
+
+  const customerById = useMemo(() => {
+    const m = new Map<string, { name: string; trade_name: string | null }>();
+    customers.forEach(c => m.set(c.id, { name: c.name, trade_name: c.trade_name }));
+    return m;
+  }, [customers]);
+
+  const companyOf = (p: any): string => {
+    const cid = p?.conexa_customer_id;
+    const c = cid ? customerById.get(cid) : null;
+    return c?.trade_name || c?.name || p?.company || '';
+  };
 
   const [step, setStep] = useState<1 | 2>(1);
   const [recipientQuery, setRecipientQuery] = useState('');
