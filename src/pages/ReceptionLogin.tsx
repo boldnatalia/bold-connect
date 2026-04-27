@@ -36,7 +36,7 @@ export default function ReceptionLogin() {
       return;
     }
 
-    navigate('/welcome');
+    navigate('/recepcao');
   };
 
   return (
