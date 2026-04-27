@@ -12,8 +12,9 @@ async function fetchAllPages(path: string, token: string) {
   const all: any[] = [];
   let offset = 0;
   const limit = 100;
+  let pageNum = 0;
   while (true) {
-    const url = `${CONEXA_BASE_URL}/${path}?limit=${limit}&offset=${offset}&active=1`;
+    const url = `${CONEXA_BASE_URL}/${path}?limit=${limit}&offset=${offset}`;
     const res = await fetch(url, {
       headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
     });
@@ -21,10 +22,20 @@ async function fetchAllPages(path: string, token: string) {
     const json = await res.json();
     const page = json?.data ?? [];
     all.push(...page);
+    pageNum++;
+    console.log(`[conexa-sync] ${path} página ${pageNum} (offset=${offset}): ${page.length} registros`);
     if (!json?.pagination?.hasNext || page.length === 0) break;
     offset += limit;
   }
+  console.log(`[conexa-sync] ${path} TOTAL recebido: ${all.length} registros`);
   return all;
+}
+
+function isActive(item: any): boolean {
+  // Conexa pode usar várias formas; consideramos ativo por padrão se não houver flag explícita falsa
+  if (item == null) return false;
+  if (item.active === 0 || item.active === false || item.isActive === false || item.status === 'inactive') return false;
+  return true;
 }
 
 serve(async (req) => {
