@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { AppLayout } from '@/components/AppLayout';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/dialog';
 import { Calendar } from '@/components/ui/calendar';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Users, MapPin, Clock, CalendarCheck, Trash2, CalendarDays } from 'lucide-react';
+import { Users, MapPin, Clock, CalendarCheck, Trash2, CalendarDays, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -34,8 +34,6 @@ const ROOMS: Room[] = [
   { id: 2213, name: 'Sala Privativa 311', capacity: 4, floor: '3º Andar' },
 ];
 
-
-// Mapa de roomId -> nome amigável
 const roomNames: Record<number, string> = {
   2106: 'Sala de Reunião 1',
   2108: 'Sala de Reunião 2',
@@ -52,7 +50,6 @@ const roomFloors: Record<number, string> = {
   2213: '3º Andar',
 };
 
-// Booking do Conexa — campos variam, então aceitamos várias chaves possíveis
 type ConexaBooking = Record<string, unknown>;
 
 interface ParsedBooking {
@@ -60,10 +57,9 @@ interface ParsedBooking {
   roomId: number;
   roomName: string;
   floor: string;
-  date: string; // YYYY-MM-DD
-  startTime: string; // HH:mm
-  endTime: string; // HH:mm
-  rawDateLabel?: string;
+  date: string;
+  startTime: string;
+  endTime: string;
 }
 
 const pick = (obj: Record<string, unknown>, keys: string[]): string => {
@@ -97,7 +93,6 @@ const extractDate = (val?: string): string => {
 };
 
 const parseBooking = (b: ConexaBooking, idx: number): ParsedBooking => {
-  // Conexa V2 returns the room inside `place: { id, name }`
   const place = (b.place ?? b.room) as { id?: number; name?: string } | undefined;
   let roomId = pickNumber(b, ['roomId', 'roomsId', 'room_id']);
   if (!roomId && place?.id) roomId = Number(place.id);
@@ -124,21 +119,36 @@ const parseBooking = (b: ConexaBooking, idx: number): ParsedBooking => {
   };
 };
 
-// Gera horários de 08:00 até 20:00 em intervalos de 30 minutos
-const generateTimeSlots = (): string[] => {
+// Slots de início (08:00 ao 19:30) — cada slot representa 30min até o próximo.
+const generateStartSlots = (): string[] => {
   const slots: string[] = [];
-  for (let h = 8; h <= 20; h++) {
+  for (let h = 8; h <= 19; h++) {
     slots.push(`${String(h).padStart(2, '0')}:00`);
-    if (h < 20) slots.push(`${String(h).padStart(2, '0')}:30`);
+    slots.push(`${String(h).padStart(2, '0')}:30`);
   }
   return slots;
 };
 
-const TIME_SLOTS = generateTimeSlots();
+const SLOTS = generateStartSlots(); // ['08:00','08:30',...,'19:30']
 
 const toMinutes = (t: string) => {
   const [h, m] = t.split(':').map(Number);
   return h * 60 + m;
+};
+
+const addMinutes = (t: string, mins: number) => {
+  const total = toMinutes(t) + mins;
+  const h = Math.floor(total / 60);
+  const m = total % 60;
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+};
+
+const formatDuration = (mins: number) => {
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  if (h && m) return `${h}h ${m}min`;
+  if (h) return `${h}h`;
+  return `${m}min`;
 };
 
 export default function RoomBooking() {
@@ -156,11 +166,9 @@ export default function RoomBooking() {
     setBookingsError(null);
     try {
       const { data, error } = await supabase.functions.invoke('conexa-get-bookings');
-      console.log('Dados CRUS do Conexa:', data);
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       const list = Array.isArray(data?.bookings) ? data.bookings : [];
-      console.log('[conexa-get-bookings] raw bookings:', list);
       setBookings(list.map((b: ConexaBooking, i: number) => parseBooking(b, i)));
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Erro ao carregar reservas';
@@ -219,6 +227,7 @@ export default function RoomBooking() {
 
       toast.success(data?.message || 'Reserva confirmada!');
       resetSelection();
+      fetchBookings();
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Erro ao confirmar reserva';
       toast.error(msg);
@@ -243,6 +252,78 @@ export default function RoomBooking() {
     if (!open && !isSubmitting) resetSelection();
   };
 
+  // Conjunto de slots ocupados (intervalos de 30min) para a sala+data selecionadas.
+  // Usa as reservas conhecidas do próprio usuário no Conexa.
+  const occupiedSlots = useMemo(() => {
+    const set = new Set<string>();
+    if (!selectedRoom || !selectedDate) return set;
+    const dateStr = format(selectedDate, 'yyyy-MM-dd');
+    for (const b of bookings) {
+      if (b.roomId !== selectedRoom.id) continue;
+      if (b.date !== dateStr) continue;
+      if (!b.startTime || !b.endTime) continue;
+      const start = toMinutes(b.startTime);
+      const end = toMinutes(b.endTime);
+      for (const s of SLOTS) {
+        const m = toMinutes(s);
+        if (m >= start && m < end) set.add(s);
+      }
+    }
+    return set;
+  }, [bookings, selectedRoom, selectedDate]);
+
+  const handleSlotClick = (slot: string) => {
+    if (occupiedSlots.has(slot)) return;
+
+    // Sem início definido → define início
+    if (!startTime) {
+      setStartTime(slot);
+      setEndTime(null);
+      return;
+    }
+
+    // Início já definido, sem fim → define fim (precisa ser depois do início)
+    if (startTime && !endTime) {
+      const startMin = toMinutes(startTime);
+      const slotMin = toMinutes(slot);
+      if (slot === startTime) {
+        // clicou no mesmo: reseta
+        setStartTime(null);
+        return;
+      }
+      if (slotMin < startMin) {
+        // clicou antes do início → vira novo início
+        setStartTime(slot);
+        return;
+      }
+      // valida que não há slot ocupado no meio
+      for (const s of SLOTS) {
+        const m = toMinutes(s);
+        if (m >= startMin && m <= slotMin && occupiedSlots.has(s)) {
+          toast.error('Há um horário ocupado dentro do intervalo selecionado');
+          return;
+        }
+      }
+      // o "fim" como horário final = slot + 30min
+      setEndTime(addMinutes(slot, 30));
+      return;
+    }
+
+    // Já tem início e fim → reinicia
+    setStartTime(slot);
+    setEndTime(null);
+  };
+
+  const isSlotInRange = (slot: string) => {
+    if (!startTime) return false;
+    const startMin = toMinutes(startTime);
+    const endMin = endTime ? toMinutes(endTime) : startMin + 30;
+    const m = toMinutes(slot);
+    return m >= startMin && m < endMin;
+  };
+
+  const summaryDuration = startTime && endTime ? toMinutes(endTime) - toMinutes(startTime) : 0;
+
   return (
     <AppLayout title="Reservar Sala">
       <div className="px-4 py-4 max-w-lg mx-auto">
@@ -261,7 +342,7 @@ export default function RoomBooking() {
               <Card
                 key={room.id}
                 onClick={() => setSelectedRoom(room)}
-                className="p-4 cursor-pointer transition-all active:scale-[0.98] hover:border-primary min-h-[80px]"
+                className="p-4 cursor-pointer transition-all active:scale-[0.98] hover:border-primary min-h-[80px] rounded-2xl border-border/60 shadow-sm"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
@@ -291,7 +372,7 @@ export default function RoomBooking() {
             {bookingsLoading ? (
               <>
                 {[1, 2, 3].map((i) => (
-                  <Card key={i} className="p-4 min-h-[80px]">
+                  <Card key={i} className="p-4 min-h-[80px] rounded-2xl">
                     <Skeleton className="h-4 w-2/3 mb-2" />
                     <Skeleton className="h-3 w-1/3 mb-3" />
                     <Skeleton className="h-3 w-1/2" />
@@ -320,7 +401,7 @@ export default function RoomBooking() {
                   ? `${b.startTime} - ${b.endTime}`
                   : b.startTime || b.endTime || 'Horário indisponível';
                 return (
-                  <Card key={b.id} className="p-4 min-h-[80px]">
+                  <Card key={b.id} className="p-4 min-h-[80px] rounded-2xl border-border/60 shadow-sm">
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex-1 min-w-0">
                         <h3 className="font-semibold text-base text-foreground truncate">
@@ -366,91 +447,128 @@ export default function RoomBooking() {
       </div>
 
       <Dialog open={!!selectedRoom} onOpenChange={handleClose}>
-        <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-md mx-auto rounded-xl p-0 max-h-[90dvh] overflow-y-auto">
-          <DialogHeader className="p-4 pb-2 text-left">
-            <DialogTitle className="text-lg">{selectedRoom?.name}</DialogTitle>
-            <p className="text-xs text-muted-foreground">
-              {selectedRoom?.floor} • {selectedRoom?.capacity} pessoas
+        <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-md mx-auto rounded-2xl p-0 max-h-[92dvh] overflow-hidden flex flex-col gap-0">
+          {/* Header compacto */}
+          <DialogHeader className="px-5 pt-5 pb-3 text-left border-b border-border/40">
+            <DialogTitle className="text-base font-semibold">{selectedRoom?.name}</DialogTitle>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {selectedRoom?.floor} • {selectedRoom?.capacity} pessoas • Funciona 08h–20h
             </p>
           </DialogHeader>
 
-          <div className="px-4 pb-4 space-y-4">
-            <div>
-              <p className="text-sm font-medium mb-2">Selecione a data</p>
-              <div className="rounded-lg border bg-card flex justify-center">
+          {/* Conteúdo rolável */}
+          <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5">
+            {/* Step 1 — Data */}
+            <section>
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
+                1. Data
+              </p>
+              <div className="rounded-2xl border border-border/60 bg-card flex justify-center shadow-sm">
                 <Calendar
                   mode="single"
                   selected={selectedDate}
-                  onSelect={setSelectedDate}
+                  onSelect={(d) => { setSelectedDate(d); setStartTime(null); setEndTime(null); }}
                   disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
                   locale={ptBR}
                   className={cn('p-2 pointer-events-auto')}
                 />
               </div>
-            </div>
+            </section>
 
-            <div>
-              <p className="text-sm font-medium mb-2 flex items-center gap-1.5">
-                <Clock className="h-4 w-4" /> Horário de início
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {TIME_SLOTS.slice(0, -1).map((time) => (
+            {/* Step 2 — Timeline */}
+            <section>
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  2. Horário
+                </p>
+                {(startTime || endTime) && (
                   <button
-                    key={`start-${time}`}
-                    onClick={() => {
-                      setStartTime(time);
-                      if (endTime && toMinutes(endTime) <= toMinutes(time)) {
-                        setEndTime(null);
-                      }
-                    }}
-                    className={cn(
-                      'px-3 py-2 rounded-full text-sm font-medium min-h-[40px] min-w-[64px] transition-all active:scale-95 border',
-                      startTime === time
-                        ? 'bg-primary text-primary-foreground border-primary'
-                        : 'bg-background text-foreground border-border hover:border-primary',
-                    )}
+                    onClick={() => { setStartTime(null); setEndTime(null); }}
+                    className="text-xs text-primary font-medium active:scale-95 transition-transform"
                   >
-                    {time}
+                    Limpar
                   </button>
-                ))}
+                )}
               </div>
-            </div>
 
-            <div>
-              <p className="text-sm font-medium mb-2 flex items-center gap-1.5">
-                <Clock className="h-4 w-4" /> Horário de fim
+              <p className="text-xs text-muted-foreground mb-3">
+                {!startTime
+                  ? 'Toque em um horário livre para iniciar'
+                  : !endTime
+                    ? 'Agora toque no horário final'
+                    : 'Intervalo selecionado'}
               </p>
-              <div className="flex flex-wrap gap-2">
-                {TIME_SLOTS.map((time) => {
-                  const disabled =
-                    !startTime || toMinutes(time) <= toMinutes(startTime);
+
+              <div className="space-y-1.5">
+                {SLOTS.map((slot) => {
+                  const occupied = occupiedSlots.has(slot);
+                  const inRange = isSlotInRange(slot);
+                  const isStart = startTime === slot;
+                  const isEndSlot = endTime ? slot === addMinutes(endTime, -30) : false;
+                  const next = addMinutes(slot, 30);
+
                   return (
                     <button
-                      key={`end-${time}`}
-                      onClick={() => !disabled && setEndTime(time)}
-                      disabled={disabled}
+                      key={slot}
+                      type="button"
+                      disabled={occupied}
+                      onClick={() => handleSlotClick(slot)}
                       className={cn(
-                        'px-3 py-2 rounded-full text-sm font-medium min-h-[40px] min-w-[64px] transition-all active:scale-95 border',
-                        endTime === time
-                          ? 'bg-primary text-primary-foreground border-primary'
-                          : 'bg-background text-foreground border-border hover:border-primary',
-                        disabled && 'opacity-40 cursor-not-allowed active:scale-100',
+                        'w-full flex items-center justify-between px-4 py-3 rounded-2xl text-sm transition-all border min-h-[48px]',
+                        'active:scale-[0.99]',
+                        occupied
+                          ? 'bg-muted/40 border-transparent text-muted-foreground/70 cursor-not-allowed'
+                          : inRange
+                            ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+                            : 'bg-card border-border/60 text-foreground shadow-sm hover:border-primary/60',
                       )}
                     >
-                      {time}
+                      <span className={cn('font-medium tabular-nums', inRange && 'font-semibold')}>
+                        {slot} <span className="opacity-60">– {next}</span>
+                      </span>
+                      <span className={cn('text-xs flex items-center gap-1', inRange && 'opacity-90')}>
+                        {occupied ? (
+                          'Ocupado'
+                        ) : isStart ? (
+                          <><Check className="h-3.5 w-3.5" /> Início</>
+                        ) : isEndSlot && endTime ? (
+                          <><Check className="h-3.5 w-3.5" /> Fim</>
+                        ) : inRange ? (
+                          ''
+                        ) : (
+                          'Livre'
+                        )}
+                      </span>
                     </button>
                   );
                 })}
               </div>
-              <p className="text-xs text-muted-foreground mt-2">
-                Funcionamento: 08:00 às 20:00 (intervalos de 30 min)
-              </p>
-            </div>
+            </section>
+          </div>
 
+          {/* Footer fixo: resumo + CTA */}
+          <div className="border-t border-border/40 px-5 pt-3 pb-4 bg-card/80 backdrop-blur-sm">
+            <div className="mb-3 min-h-[40px] flex flex-col justify-center">
+              {startTime && endTime && selectedDate ? (
+                <>
+                  <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                    Reserva para
+                  </p>
+                  <p className="text-sm font-semibold text-foreground">
+                    {format(selectedDate, "dd/MM", { locale: ptBR })} • {startTime} às {endTime}
+                    <span className="text-muted-foreground font-normal"> ({formatDuration(summaryDuration)})</span>
+                  </p>
+                </>
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  Selecione data e horário para confirmar
+                </p>
+              )}
+            </div>
             <Button
               onClick={handleConfirmClick}
               disabled={!selectedDate || !startTime || !endTime || isSubmitting}
-              className="w-full min-h-[48px] text-base font-semibold"
+              className="w-full min-h-[48px] text-base font-semibold rounded-2xl"
               size="lg"
             >
               {isSubmitting ? (
