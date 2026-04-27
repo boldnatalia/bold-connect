@@ -545,26 +545,12 @@ export default function AdminUsers() {
                   </Alert>
                 )}
 
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email *</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="usuario@empresa.com"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="password">Senha *</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="Mínimo 6 caracteres"
-                    value={formData.password}
-                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  />
+                {/* ===== Seção 1: Vínculo Conexa ===== */}
+                <div className="space-y-1">
+                  <h3 className="text-sm font-semibold text-foreground">Dados do Conexa</h3>
+                  <p className="text-xs text-muted-foreground">
+                    Selecione a empresa e a pessoa. Os dados serão preenchidos automaticamente.
+                  </p>
                 </div>
 
                 <div className="space-y-2">
@@ -664,11 +650,13 @@ export default function AdminUsers() {
                                   value={`${person.name} ${person.document ?? ''}`}
                                   onSelect={() => {
                                     const autoCpf = extractPersonCpf(person);
+                                    const autoEmail = extractPersonEmail(person);
                                     setFormData({
                                       ...formData,
                                       conexa_person_id: person.id,
                                       full_name: person.name,
                                       cpf: autoCpf || formData.cpf,
+                                      email: formData.email || autoEmail,
                                     });
                                     setPersonPickerOpen(false);
                                   }}
@@ -694,32 +682,74 @@ export default function AdminUsers() {
                 )}
 
                 {formData.conexa_person_id && (
-                  <div className="space-y-2">
-                    <Label htmlFor="full_name_display">Nome Completo</Label>
-                    <Input
-                      id="full_name_display"
-                      value={formData.full_name}
-                      readOnly
-                      className="bg-muted/50"
-                    />
-                    <p className="text-xs text-muted-foreground">Preenchido automaticamente da Pessoa selecionada.</p>
-                  </div>
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="full_name_display">Nome Completo</Label>
+                      <Input
+                        id="full_name_display"
+                        value={formData.full_name}
+                        readOnly
+                        disabled
+                        className="bg-muted/50 cursor-not-allowed"
+                      />
+                      <p className="text-xs text-muted-foreground">Importado do Conexa.</p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="cpf">CPF *</Label>
+                      <Input
+                        id="cpf"
+                        placeholder="00000000000"
+                        value={formData.cpf}
+                        onChange={(e) => setFormData({ ...formData, cpf: formatCPF(e.target.value) })}
+                        maxLength={11}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        {formData.cpf
+                          ? 'CPF importado do Conexa. Edite se necessário.'
+                          : 'Não encontrado no Conexa — preencha manualmente (11 dígitos).'}
+                      </p>
+                    </div>
+                  </>
                 )}
 
+                {/* ===== Divisor visual ===== */}
+                <div className="relative pt-2">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t" />
+                  </div>
+                  <div className="relative flex justify-start">
+                    <span className="bg-background pr-2 text-sm font-semibold text-foreground">
+                      Acesso ao App
+                    </span>
+                  </div>
+                </div>
+
                 <div className="space-y-2">
-                  <Label htmlFor="cpf">CPF *</Label>
+                  <Label htmlFor="email">E-mail (login) *</Label>
                   <Input
-                    id="cpf"
-                    placeholder="00000000000"
-                    value={formData.cpf}
-                    onChange={(e) => setFormData({ ...formData, cpf: formatCPF(e.target.value) })}
-                    maxLength={11}
+                    id="email"
+                    type="email"
+                    placeholder="usuario@empresa.com"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   />
                   <p className="text-xs text-muted-foreground">
-                    {formData.conexa_person_id && formData.cpf
-                      ? 'CPF importado do Conexa. Edite se necessário.'
-                      : 'Apenas números (11 dígitos).'}
+                    {formData.conexa_person_id && formData.email
+                      ? 'E-mail sugerido a partir do Conexa. Edite se preferir outro.'
+                      : 'Será usado para acessar o app.'}
                   </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="password">Senha *</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="Mínimo 6 caracteres"
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  />
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
