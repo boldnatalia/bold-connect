@@ -354,14 +354,21 @@ export default function AdminTickets() {
                   </div>
                 )}
 
-                {/* Gestão do Chamado */}
-                <section className="space-y-4 pt-2">
-                  <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    Gestão do Chamado
-                  </h3>
+                {/* Divisor elegante */}
+                <div className="relative pt-2">
+                  <div className="absolute inset-0 flex items-center" aria-hidden="true">
+                    <div className="w-full border-t border-border/60" />
+                  </div>
+                  <div className="relative flex justify-center">
+                    <span className="bg-background px-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                      Gestão do Chamado
+                    </span>
+                  </div>
+                </div>
 
+                <section className="space-y-5">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Alterar Status</label>
+                    <label className="text-xs font-medium text-muted-foreground">Alterar Status</label>
                     <Select
                       value={selectedTicket.status}
                       onValueChange={(value) => {
@@ -380,7 +387,10 @@ export default function AdminTickets() {
                     </Select>
                   </div>
 
-                  <TicketCommentsSection ticketId={selectedTicket.id} />
+                  <TicketChatSection
+                    ticketId={selectedTicket.id}
+                    clientName={selectedTicket.profile?.full_name ?? 'Cliente'}
+                  />
                 </section>
               </div>
             )}
