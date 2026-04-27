@@ -40,15 +40,15 @@ serve(async (req) => {
       throw new Error('Unauthorized')
     }
 
-    // Check if caller is admin
-    const { data: roleData } = await supabaseAdmin
+    // Check if caller is admin or central_atendimento
+    const { data: roleRows } = await supabaseAdmin
       .from('user_roles')
       .select('role')
       .eq('user_id', caller.id)
-      .single()
 
-    if (roleData?.role !== 'admin') {
-      throw new Error('Only admins can create users')
+    const roles = (roleRows ?? []).map((r: any) => r.role)
+    if (!roles.includes('admin') && !roles.includes('central_atendimento')) {
+      throw new Error('Apenas administradores podem criar usuários')
     }
 
     // Get request body

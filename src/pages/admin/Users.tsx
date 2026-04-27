@@ -47,7 +47,7 @@ import { Plus, Loader2, Search, UserPlus, MoreVertical, UserX, UserCheck, Trash2
 import type { Profile } from '@/types';
 import { z } from 'zod';
 import { useCustomers } from '@/hooks/useCustomers';
-import { usePersonsByCustomer } from '@/hooks/usePersons';
+import { usePersonsByCustomer, extractPersonCpf } from '@/hooks/usePersons';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { cn } from '@/lib/utils';
@@ -207,9 +207,10 @@ export default function AdminUsers() {
       });
 
       if (authError) throw authError;
-      if (!authData?.user?.id) throw new Error('Erro ao criar usuário');
+      if ((authData as any)?.error) throw new Error((authData as any).error);
+      if (!authData?.user?.id) throw new Error('Erro ao criar usuário (sem ID retornado)');
 
-      const { error: profileError } = await supabase.from('profiles').insert({
+      const profilePayload = {
         user_id: authData.user.id,
         full_name: data.full_name,
         cpf: data.cpf,
@@ -218,9 +219,15 @@ export default function AdminUsers() {
         conexa_person_id: data.conexa_person_id || null,
         floor_id: data.floor_id,
         room: data.room,
-      });
+      };
+      console.log('[create-user] inserting profile', profilePayload);
 
-      if (profileError) throw profileError;
+      const { error: profileError } = await supabase.from('profiles').insert(profilePayload);
+
+      if (profileError) {
+        console.error('[create-user] profile insert failed', profileError);
+        throw new Error(`Falha ao salvar perfil: ${profileError.message}`);
+      }
 
       return authData;
     },
@@ -561,28 +568,6 @@ export default function AdminUsers() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="full_name">Nome Completo *</Label>
-                  <Input
-                    id="full_name"
-                    placeholder="João da Silva"
-                    value={formData.full_name}
-                    onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="cpf">CPF *</Label>
-                  <Input
-                    id="cpf"
-                    placeholder="00000000000"
-                    value={formData.cpf}
-                    onChange={(e) => setFormData({ ...formData, cpf: formatCPF(e.target.value) })}
-                    maxLength={11}
-                  />
-                  <p className="text-xs text-muted-foreground">Apenas números</p>
-                </div>
-
-                <div className="space-y-2">
                   <Label>Empresa (Conexa) *</Label>
                   <Popover open={companyPickerOpen} onOpenChange={setCompanyPickerOpen}>
                     <PopoverTrigger asChild>
@@ -622,6 +607,8 @@ export default function AdminUsers() {
                                     conexa_customer_id: c.id,
                                     company: c.trade_name || c.name,
                                     conexa_person_id: '',
+                                    full_name: '',
+                                    cpf: '',
                                   });
                                   setCompanyPickerOpen(false);
                                 }}
@@ -676,10 +663,12 @@ export default function AdminUsers() {
                                   key={person.id}
                                   value={`${person.name} ${person.document ?? ''}`}
                                   onSelect={() => {
+                                    const autoCpf = extractPersonCpf(person);
                                     setFormData({
                                       ...formData,
                                       conexa_person_id: person.id,
-                                      full_name: formData.full_name || person.name,
+                                      full_name: person.name,
+                                      cpf: autoCpf || formData.cpf,
                                     });
                                     setPersonPickerOpen(false);
                                   }}
@@ -703,6 +692,35 @@ export default function AdminUsers() {
                     </p>
                   </div>
                 )}
+
+                {formData.conexa_person_id && (
+                  <div className="space-y-2">
+                    <Label htmlFor="full_name_display">Nome Completo</Label>
+                    <Input
+                      id="full_name_display"
+                      value={formData.full_name}
+                      readOnly
+                      className="bg-muted/50"
+                    />
+                    <p className="text-xs text-muted-foreground">Preenchido automaticamente da Pessoa selecionada.</p>
+                  </div>
+                )}
+
+                <div className="space-y-2">
+                  <Label htmlFor="cpf">CPF *</Label>
+                  <Input
+                    id="cpf"
+                    placeholder="00000000000"
+                    value={formData.cpf}
+                    onChange={(e) => setFormData({ ...formData, cpf: formatCPF(e.target.value) })}
+                    maxLength={11}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    {formData.conexa_person_id && formData.cpf
+                      ? 'CPF importado do Conexa. Edite se necessário.'
+                      : 'Apenas números (11 dígitos).'}
+                  </p>
+                </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-2">
