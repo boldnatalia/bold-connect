@@ -271,12 +271,15 @@ export default function AdminTickets() {
 
         {/* Ticket Details Sheet (mobile-friendly) */}
         <Sheet open={!!selectedTicket} onOpenChange={() => setSelectedTicket(null)}>
-          <SheetContent side="bottom" className="h-[85vh] rounded-t-2xl">
-            <SheetHeader className="text-left pb-4">
-              <SheetTitle className="pr-6">{selectedTicket?.title}</SheetTitle>
+          <SheetContent side="bottom" className="h-[88vh] rounded-t-2xl p-0">
+            <SheetHeader className="text-left px-6 pt-6 pb-2">
+              <SheetTitle className="pr-8 text-xl font-semibold tracking-tight">
+                {selectedTicket?.title}
+              </SheetTitle>
             </SheetHeader>
             {selectedTicket && (
-              <div className="space-y-4 overflow-y-auto h-[calc(100%-4rem)] pb-8">
+              <div className="overflow-y-auto h-[calc(100%-5rem)] px-6 pb-10 space-y-8">
+                {/* Meta */}
                 <div className="flex flex-wrap items-center gap-2">
                   <Badge className={cn('text-xs', getStatusClass(selectedTicket.status))}>
                     {TICKET_STATUS_LABELS[selectedTicket.status]}
@@ -286,50 +289,52 @@ export default function AdminTickets() {
                   </span>
                 </div>
 
-                {/* User info */}
+                {/* Identificação + Observação */}
                 {selectedTicket.profile && (
-                  <div className="p-3 bg-muted/50 rounded-lg space-y-1">
-                    <p className="text-sm font-medium">{selectedTicket.profile.full_name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {selectedTicket.profile.company} • {selectedTicket.profile.room}
-                    </p>
+                  <div className="space-y-3">
+                    <div className="bg-muted/40 rounded-xl p-4 space-y-1">
+                      <p className="text-sm font-medium">{selectedTicket.profile.full_name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {selectedTicket.profile.company} • {selectedTicket.profile.room}
+                      </p>
+                    </div>
+
+                    {selectedTicket.description?.trim() && (
+                      <p className="text-sm text-muted-foreground/90 leading-relaxed border-l-2 border-muted-foreground/20 pl-3">
+                        {selectedTicket.description}
+                      </p>
+                    )}
                   </div>
                 )}
 
-                <div className="p-3 bg-muted rounded-lg">
-                  <p className="text-sm">{selectedTicket.description}</p>
-                </div>
+                {/* Gestão do Chamado */}
+                <section className="space-y-4 pt-2">
+                  <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    Gestão do Chamado
+                  </h3>
 
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Alterar Status</label>
-                  <Select
-                    value={selectedTicket.status}
-                    onValueChange={(value) => {
-                      handleStatusChange(selectedTicket.id, value as TicketStatus);
-                      setSelectedTicket({ ...selectedTicket, status: value as TicketStatus });
-                    }}
-                  >
-                    <SelectTrigger className="h-12">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="pending">Pendente</SelectItem>
-                      <SelectItem value="in_progress">Em andamento</SelectItem>
-                      <SelectItem value="resolved">Resolvido</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Alterar Status</label>
+                    <Select
+                      value={selectedTicket.status}
+                      onValueChange={(value) => {
+                        handleStatusChange(selectedTicket.id, value as TicketStatus);
+                        setSelectedTicket({ ...selectedTicket, status: value as TicketStatus });
+                      }}
+                    >
+                      <SelectTrigger className="h-12">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="pending">Pendente</SelectItem>
+                        <SelectItem value="in_progress">Em andamento</SelectItem>
+                        <SelectItem value="resolved">Resolvido</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-                {/* Comments Section */}
-                <TicketCommentsSection ticketId={selectedTicket.id} />
-
-                <Button 
-                  variant="outline" 
-                  onClick={() => setSelectedTicket(null)}
-                  className="w-full h-12"
-                >
-                  Fechar
-                </Button>
+                  <TicketCommentsSection ticketId={selectedTicket.id} />
+                </section>
               </div>
             )}
           </SheetContent>
