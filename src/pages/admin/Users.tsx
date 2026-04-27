@@ -203,6 +203,7 @@ export default function AdminUsers() {
         full_name: data.full_name,
         cpf: data.cpf,
         company: data.company,
+        conexa_customer_id: data.conexa_customer_id || null,
         floor_id: data.floor_id,
         room: data.room,
       });
