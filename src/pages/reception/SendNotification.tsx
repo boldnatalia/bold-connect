@@ -9,13 +9,12 @@ import { useReceptionNotifications } from '@/hooks/useReceptionNotifications';
 import { useProfiles } from '@/hooks/useProfiles';
 import { useToast } from '@/hooks/use-toast';
 import {
-  Send, User, Loader2, Search, Check, X,
+  Send, User, Loader2, Search, Check, X, ArrowLeft,
   Users, Package, UtensilsCrossed, Bell, Car, Coffee,
   Mail, AlertCircle, MessageSquare, Building2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-// Map category/title keywords to icons
 function getMessageIcon(msg: { title: string; category: string | null }) {
   const t = `${msg.title} ${msg.category ?? ''}`.toLowerCase();
   if (t.includes('visit')) return Users;
@@ -30,6 +29,19 @@ function getMessageIcon(msg: { title: string; category: string | null }) {
   return MessageSquare;
 }
 
+function buildPreview(content: string, recipientName: string, inputValue?: string) {
+  let text = content
+    .replace(/\[nome\]/gi, recipientName.split(' ')[0])
+    .replace(/\{nome\}/gi, recipientName.split(' ')[0]);
+  if (inputValue) {
+    text = text.replace(/\[valor\]|\{valor\}|\[codigo\]|\{codigo\}/gi, inputValue);
+    if (!/\[valor\]|\{valor\}|\[codigo\]|\{codigo\}/i.test(content)) {
+      text = `${text} ${inputValue}`;
+    }
+  }
+  return text;
+}
+
 export default function SendNotification() {
   const navigate = useNavigate();
   const { messages, isLoading: messagesLoading } = useReceptionMessages();
@@ -37,6 +49,7 @@ export default function SendNotification() {
   const { profiles, isLoading: profilesLoading } = useProfiles();
   const { toast } = useToast();
 
+  const [step, setStep] = useState<1 | 2>(1);
   const [recipientQuery, setRecipientQuery] = useState('');
   const [selectedRecipient, setSelectedRecipient] = useState<string>('');
   const [selectedMessage, setSelectedMessage] = useState<string>('');
@@ -59,16 +72,25 @@ export default function SendNotification() {
       .slice(0, 6);
   }, [recipientQuery, activeClients]);
 
-  const handleSend = async () => {
-    if (!selectedRecipient || !selectedMessage) {
-      toast({ title: 'Erro', description: 'Selecione o destinatário e o tipo de aviso', variant: 'destructive' });
+  const requiresClientResponse = selectedMessageData?.has_input_field && selectedMessageData.category === 'Códigos';
+  const needsReceptionInput = selectedMessageData?.has_input_field && !requiresClientResponse;
+
+  const handlePickMessage = (id: string) => {
+    if (!selectedRecipient) {
+      toast({ title: 'Selecione um destinatário', description: 'Busque pelo nome do cliente primeiro.', variant: 'destructive' });
       return;
     }
+    setSelectedMessage(id);
+    setInputValue('');
+    // Auto-advance to confirmation
+    setStep(2);
+  };
 
-    const requiresClientResponse = selectedMessageData?.has_input_field && selectedMessageData.category === 'Códigos';
+  const handleSend = async () => {
+    if (!selectedRecipient || !selectedMessage) return;
 
-    if (selectedMessageData?.has_input_field && !requiresClientResponse && !inputValue.trim()) {
-      toast({ title: 'Erro', description: `Preencha: ${selectedMessageData.input_field_label}`, variant: 'destructive' });
+    if (needsReceptionInput && !inputValue.trim()) {
+      toast({ title: 'Preencha o campo', description: selectedMessageData?.input_field_label || '', variant: 'destructive' });
       return;
     }
 
@@ -81,11 +103,9 @@ export default function SendNotification() {
       });
 
       setJustSent(true);
-      toast({ title: '✓ Aviso enviado!', description: `Notificação entregue a ${selectedRecipientData?.full_name}.` });
+      toast({ title: '✓ Notificação enviada!', description: `Entregue a ${selectedRecipientData?.full_name}.` });
 
-      setTimeout(() => {
-        navigate('/recepcao');
-      }, 900);
+      setTimeout(() => navigate('/recepcao'), 900);
     } catch {
       toast({ title: 'Erro ao enviar', description: 'Tente novamente', variant: 'destructive' });
     }
@@ -93,7 +113,7 @@ export default function SendNotification() {
 
   if (messagesLoading || profilesLoading) {
     return (
-      <AppLayout title="Enviar Aviso" showBack>
+      <AppLayout title="Nova Notificação" showBack>
         <div className="flex items-center justify-center h-64">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
@@ -101,10 +121,115 @@ export default function SendNotification() {
     );
   }
 
+  // ============ STEP 2: Confirmation ============
+  if (step === 2 && selectedMessageData && selectedRecipientData) {
+    const Icon = getMessageIcon(selectedMessageData);
+    const previewText = buildPreview(
+      selectedMessageData.content,
+      selectedRecipientData.full_name,
+      inputValue
+    );
+
+    return (
+      <AppLayout title="Confirmar Envio" showBack onBack={() => setStep(1)}>
+        <div className="min-h-[calc(100dvh-56px)] bg-[#F8F9FA] dark:bg-muted/30">
+          <div className="p-4 pb-32 space-y-4">
+            <button
+              onClick={() => setStep(1)}
+              className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground min-h-[44px] -ml-1 px-1"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Voltar e editar
+            </button>
+
+            <Card className="rounded-2xl border-border/60 shadow-sm bg-card">
+              <CardContent className="p-5 space-y-5">
+                {/* Recipient highlight */}
+                <div className="text-center space-y-1">
+                  <p className="text-[11px] uppercase tracking-wide text-muted-foreground font-medium">
+                    Notificar
+                  </p>
+                  <p className="text-xl font-bold leading-tight">
+                    {selectedRecipientData.full_name}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {selectedRecipientData.company} · {selectedRecipientData.floor?.name || ''} Sala {selectedRecipientData.room}
+                  </p>
+                </div>
+
+                <div className="h-px bg-border/60" />
+
+                {/* Message icon + title */}
+                <div className="flex flex-col items-center gap-3">
+                  <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Icon className="h-8 w-8 text-primary" />
+                  </div>
+                  <p className="text-sm font-semibold text-center">
+                    {selectedMessageData.title}
+                  </p>
+                </div>
+
+                {/* Optional reception input on confirmation */}
+                {needsReceptionInput && (
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-muted-foreground">
+                      {selectedMessageData.input_field_label}
+                    </label>
+                    <Input
+                      autoFocus
+                      value={inputValue}
+                      onChange={(e) => setInputValue(e.target.value)}
+                      placeholder={selectedMessageData.input_field_placeholder || ''}
+                      className="min-h-[44px] rounded-xl"
+                    />
+                  </div>
+                )}
+
+                {/* Full message */}
+                <div className="rounded-xl bg-muted/60 dark:bg-muted/40 p-4 border border-border/40">
+                  <p className="text-[11px] uppercase tracking-wide text-muted-foreground font-medium mb-2">
+                    Mensagem que será enviada
+                  </p>
+                  <p className="text-sm leading-relaxed text-foreground">
+                    {previewText}
+                  </p>
+                </div>
+
+                {requiresClientResponse && (
+                  <p className="text-xs text-muted-foreground text-center">
+                    ℹ️ O cliente poderá responder com o código pelo app.
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Sticky confirm button */}
+          <div className="fixed bottom-0 left-0 right-0 max-w-lg mx-auto p-4 bg-[#F8F9FA]/95 dark:bg-background/95 backdrop-blur border-t border-border/60">
+            <Button
+              onClick={handleSend}
+              disabled={isSending || justSent}
+              className="w-full min-h-[56px] rounded-2xl text-base font-semibold shadow-md bg-primary hover:bg-primary/90 text-primary-foreground"
+            >
+              {justSent ? (
+                <><Check className="h-5 w-5 mr-2" />Enviado!</>
+              ) : isSending ? (
+                <><Loader2 className="h-5 w-5 animate-spin mr-2" />Enviando...</>
+              ) : (
+                <><Send className="h-5 w-5 mr-2" />Confirmar e Enviar Notificação</>
+              )}
+            </Button>
+          </div>
+        </div>
+      </AppLayout>
+    );
+  }
+
+  // ============ STEP 1: Pick recipient + message ============
   return (
-    <AppLayout title="Enviar Aviso" showBack>
-      <div className="p-4 space-y-4 pb-32">
-        {/* Recipient — autocomplete search */}
+    <AppLayout title="Nova Notificação" showBack>
+      <div className="p-4 space-y-4 pb-8">
+        {/* Recipient */}
         <Card className="rounded-2xl border-border/60 shadow-sm">
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
@@ -170,7 +295,7 @@ export default function SendNotification() {
           </CardContent>
         </Card>
 
-        {/* Message type — grid 2 columns */}
+        {/* Message type — grid, click to advance */}
         <Card className="rounded-2xl border-border/60 shadow-sm">
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
@@ -182,27 +307,20 @@ export default function SendNotification() {
             <div className="grid grid-cols-2 gap-2.5">
               {messages.map((msg) => {
                 const Icon = getMessageIcon(msg);
-                const isSelected = selectedMessage === msg.id;
                 return (
                   <button
                     key={msg.id}
-                    onClick={() => { setSelectedMessage(msg.id); setInputValue(''); }}
+                    onClick={() => handlePickMessage(msg.id)}
+                    disabled={!selectedRecipient}
                     className={cn(
-                      'relative aspect-square flex flex-col items-center justify-center gap-2 p-3 rounded-2xl border text-center transition-all duration-200 active:scale-95',
-                      isSelected
-                        ? 'border-primary bg-primary/10 shadow-sm'
-                        : 'border-border/60 bg-card hover:bg-muted/40'
+                      'relative aspect-square flex flex-col items-center justify-center gap-2 p-3 rounded-2xl border-2 text-center transition-all duration-200 active:scale-95',
+                      'border-border/60 bg-card',
+                      'hover:bg-primary/5 hover:border-primary/40',
+                      'focus-visible:bg-primary/10 focus-visible:border-primary',
+                      'disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 disabled:hover:bg-card disabled:hover:border-border/60'
                     )}
                   >
-                    {isSelected && (
-                      <span className="absolute top-2 right-2 h-5 w-5 rounded-full bg-primary flex items-center justify-center">
-                        <Check className="h-3 w-3 text-primary-foreground" />
-                      </span>
-                    )}
-                    <span className={cn(
-                      'h-10 w-10 rounded-full flex items-center justify-center',
-                      isSelected ? 'bg-primary/20' : 'bg-primary/10'
-                    )}>
+                    <span className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
                       <Icon className="h-5 w-5 text-primary" />
                     </span>
                     <span className="text-xs font-medium leading-tight line-clamp-2">
@@ -212,68 +330,13 @@ export default function SendNotification() {
                 );
               })}
             </div>
+            {!selectedRecipient && (
+              <p className="text-[11px] text-muted-foreground text-center mt-3">
+                Selecione um destinatário acima para continuar
+              </p>
+            )}
           </CardContent>
         </Card>
-
-        {/* Input field (reception input) */}
-        {selectedMessageData?.has_input_field && selectedMessageData.category !== 'Códigos' && (
-          <Card className="rounded-2xl border-border/60 shadow-sm">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm">{selectedMessageData.input_field_label}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Input
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                placeholder={selectedMessageData.input_field_placeholder || ''}
-                className="min-h-[44px] rounded-xl"
-              />
-            </CardContent>
-          </Card>
-        )}
-
-        {selectedMessageData?.has_input_field && selectedMessageData.category === 'Códigos' && (
-          <Card className="rounded-2xl border-primary/30 bg-primary/5">
-            <CardContent className="p-4">
-              <p className="text-sm text-muted-foreground">
-                ℹ️ O cliente receberá este aviso e poderá responder com o código direto pelo app.
-              </p>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Preview */}
-        {selectedMessageData && selectedRecipientData && (
-          <Card className="rounded-2xl border-border/60 bg-muted/40 shadow-sm">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-xs uppercase tracking-wide text-muted-foreground">Prévia</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm">
-                {selectedMessageData.content}
-                {inputValue && <span className="font-semibold"> {inputValue}</span>}
-              </p>
-            </CardContent>
-          </Card>
-        )}
-      </div>
-
-      {/* Sticky send button */}
-      <div className="fixed bottom-0 left-0 right-0 max-w-lg mx-auto p-4 bg-background/95 backdrop-blur border-t border-border/60">
-        <Button
-          onClick={handleSend}
-          disabled={!selectedRecipient || !selectedMessage || isSending || justSent}
-          className="w-full min-h-[52px] rounded-xl text-base font-medium shadow-md"
-          size="lg"
-        >
-          {justSent ? (
-            <><Check className="h-5 w-5 mr-2" />Enviado!</>
-          ) : isSending ? (
-            <><Loader2 className="h-5 w-5 animate-spin mr-2" />Enviando...</>
-          ) : (
-            <><Send className="h-5 w-5 mr-2" />Enviar Aviso</>
-          )}
-        </Button>
       </div>
     </AppLayout>
   );
