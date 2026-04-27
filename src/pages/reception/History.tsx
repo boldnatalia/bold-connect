@@ -105,13 +105,29 @@ export default function ReceptionHistory() {
                         {n.message?.title || 'Aviso personalizado'}
                       </p>
                     </div>
-                    <span className={cn(
-                      'inline-flex items-center gap-1 px-2.5 py-1 rounded-full border text-[11px] font-medium shrink-0',
-                      className
-                    )}>
-                      <Icon className="h-3 w-3" />
-                      {label}
-                    </span>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <span className={cn(
+                        'inline-flex items-center gap-1 px-2.5 py-1 rounded-full border text-[11px] font-medium',
+                        className
+                      )}>
+                        <Icon className="h-3 w-3" />
+                        {label}
+                      </span>
+                      {status === 'unread' && (
+                        <button
+                          onClick={() => handleResend(n)}
+                          disabled={resendingId === n.id}
+                          aria-label="Reenviar notificação"
+                          className="h-8 w-8 rounded-full flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 active:scale-95 transition-all disabled:opacity-50"
+                        >
+                          {resendingId === n.id ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            <RotateCw className="h-3.5 w-3.5" />
+                          )}
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                   {n.input_value && (
