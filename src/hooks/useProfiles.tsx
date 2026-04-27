@@ -9,7 +9,7 @@ export function useProfiles() {
       // Use the secure view that masks CPF for recepcao users
       const { data, error } = await supabase
         .from('profiles_secure')
-        .select('*, floor:floors(*), customer:customers(id, name, trade_name)')
+        .select('*, floor:floors(*)')
         .order('company', { ascending: true })
         .order('full_name', { ascending: true });
 
