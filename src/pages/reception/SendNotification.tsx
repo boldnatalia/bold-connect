@@ -297,7 +297,7 @@ export default function SendNotification() {
                         >
                           <p className="font-medium text-sm">{p.full_name}</p>
                           <p className="text-xs text-muted-foreground">
-                            {p.company} · {p.floor?.name || ''} Sala {p.room}
+                            {companyOf(p)} · {p.floor?.name || ''} Sala {p.room}
                           </p>
                         </button>
                       ))
