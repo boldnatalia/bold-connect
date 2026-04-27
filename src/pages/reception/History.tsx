@@ -1,10 +1,12 @@
+import { useState } from 'react';
 import { AppLayout } from '@/components/AppLayout';
 import { Card, CardContent } from '@/components/ui/card';
 import { useReceptionNotifications } from '@/hooks/useReceptionNotifications';
-import { Loader2, CheckCircle2, Clock, Eye, MessageSquare, Quote } from 'lucide-react';
+import { Loader2, CheckCircle2, Clock, Eye, MessageSquare, Quote, RotateCw } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
 
 type StatusKind = 'responded' | 'pending' | 'unread' | 'read';
 
@@ -39,7 +41,30 @@ const STATUS_STYLES: Record<StatusKind, { label: string; className: string; Icon
 };
 
 export default function ReceptionHistory() {
-  const { notifications, isLoading } = useReceptionNotifications();
+  const { notifications, isLoading, sendNotification } = useReceptionNotifications();
+  const { toast } = useToast();
+  const [resendingId, setResendingId] = useState<string | null>(null);
+
+  const handleResend = async (n: typeof notifications[number]) => {
+    if (!n.message_id) {
+      toast({ title: 'Não é possível reenviar', description: 'Mensagem original indisponível.', variant: 'destructive' });
+      return;
+    }
+    try {
+      setResendingId(n.id);
+      await sendNotification({
+        recipientId: n.recipient_id,
+        messageId: n.message_id,
+        inputValue: n.input_value || undefined,
+        requiresResponse: n.requires_response,
+      });
+      toast({ title: '✓ Reenviado!', description: `Notificação enviada novamente a ${n.recipient?.full_name || 'cliente'}.` });
+    } catch {
+      toast({ title: 'Erro ao reenviar', description: 'Tente novamente.', variant: 'destructive' });
+    } finally {
+      setResendingId(null);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -80,13 +105,29 @@ export default function ReceptionHistory() {
                         {n.message?.title || 'Aviso personalizado'}
                       </p>
                     </div>
-                    <span className={cn(
-                      'inline-flex items-center gap-1 px-2.5 py-1 rounded-full border text-[11px] font-medium shrink-0',
-                      className
-                    )}>
-                      <Icon className="h-3 w-3" />
-                      {label}
-                    </span>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <span className={cn(
+                        'inline-flex items-center gap-1 px-2.5 py-1 rounded-full border text-[11px] font-medium',
+                        className
+                      )}>
+                        <Icon className="h-3 w-3" />
+                        {label}
+                      </span>
+                      {status === 'unread' && (
+                        <button
+                          onClick={() => handleResend(n)}
+                          disabled={resendingId === n.id}
+                          aria-label="Reenviar notificação"
+                          className="h-8 w-8 rounded-full flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 active:scale-95 transition-all disabled:opacity-50"
+                        >
+                          {resendingId === n.id ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            <RotateCw className="h-3.5 w-3.5" />
+                          )}
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                   {n.input_value && (
