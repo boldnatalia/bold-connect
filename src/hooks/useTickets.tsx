@@ -28,7 +28,7 @@ export function useTickets() {
       // Fetch profile + latest admin comment timestamp per ticket
       const ticketsEnriched = await Promise.all(
         (data || []).map(async (ticket) => {
-          const [{ data: profileData }, { data: lastAdminComment }] = await Promise.all([
+          const [{ data: profileData }, { data: lastAdminComment }, { data: lastClientComment }, { count: clientCount }] = await Promise.all([
             supabase
               .from('profiles')
               .select('full_name, company, room, floor:floors(name)')
@@ -43,12 +43,29 @@ export function useTickets() {
               .order('created_at', { ascending: false })
               .limit(1)
               .maybeSingle(),
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (supabase as any)
+              .from('ticket_comments')
+              .select('created_at')
+              .eq('ticket_id', ticket.id)
+              .eq('is_admin', false)
+              .order('created_at', { ascending: false })
+              .limit(1)
+              .maybeSingle(),
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (supabase as any)
+              .from('ticket_comments')
+              .select('id', { count: 'exact', head: true })
+              .eq('ticket_id', ticket.id)
+              .eq('is_admin', false),
           ]);
 
           return {
             ...ticket,
             profile: profileData,
             last_admin_comment_at: lastAdminComment?.created_at ?? null,
+            last_client_comment_at: lastClientComment?.created_at ?? null,
+            unread_client_count: clientCount ?? 0,
           };
         })
       );

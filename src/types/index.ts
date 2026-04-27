@@ -91,6 +91,8 @@ export interface Ticket {
   profile?: Profile;
   comments?: TicketComment[];
   last_admin_comment_at?: string | null;
+  last_client_comment_at?: string | null;
+  unread_client_count?: number;
 }
 
 export interface Announcement {
