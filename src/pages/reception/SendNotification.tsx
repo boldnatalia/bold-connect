@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { useReceptionMessages } from '@/hooks/useReceptionMessages';
 import { useReceptionNotifications } from '@/hooks/useReceptionNotifications';
 import { useProfiles } from '@/hooks/useProfiles';
+import { useCustomers } from '@/hooks/useCustomers';
 import { useToast } from '@/hooks/use-toast';
 import {
   Send, User, Loader2, Search, Check, X, ArrowLeft,
@@ -47,7 +48,20 @@ export default function SendNotification() {
   const { messages, isLoading: messagesLoading } = useReceptionMessages();
   const { sendNotification, isSending } = useReceptionNotifications();
   const { profiles, isLoading: profilesLoading } = useProfiles();
+  const { customers } = useCustomers();
   const { toast } = useToast();
+
+  const customerById = useMemo(() => {
+    const m = new Map<string, { name: string; trade_name: string | null }>();
+    customers.forEach(c => m.set(c.id, { name: c.name, trade_name: c.trade_name }));
+    return m;
+  }, [customers]);
+
+  const companyOf = (p: any): string => {
+    const cid = p?.conexa_customer_id;
+    const c = cid ? customerById.get(cid) : null;
+    return c?.trade_name || c?.name || p?.company || '';
+  };
 
   const [step, setStep] = useState<1 | 2>(1);
   const [recipientQuery, setRecipientQuery] = useState('');
@@ -66,11 +80,11 @@ export default function SendNotification() {
     return activeClients
       .filter(p =>
         p.full_name.toLowerCase().includes(q) ||
-        (p.company || '').toLowerCase().includes(q) ||
+        companyOf(p).toLowerCase().includes(q) ||
         (p.room || '').toLowerCase().includes(q)
       )
       .slice(0, 6);
-  }, [recipientQuery, activeClients]);
+  }, [recipientQuery, activeClients, customerById]);
 
   const requiresClientResponse = selectedMessageData?.has_input_field && selectedMessageData.category === 'Códigos';
   const needsReceptionInput = selectedMessageData?.has_input_field && !requiresClientResponse;
@@ -153,7 +167,7 @@ export default function SendNotification() {
                     {selectedRecipientData.full_name}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {selectedRecipientData.company} · {selectedRecipientData.floor?.name || ''} Sala {selectedRecipientData.room}
+                    {companyOf(selectedRecipientData)} · {selectedRecipientData.floor?.name || ''} Sala {selectedRecipientData.room}
                   </p>
                 </div>
 
@@ -243,7 +257,7 @@ export default function SendNotification() {
                 <div className="min-w-0">
                   <p className="font-medium text-sm truncate">{selectedRecipientData.full_name}</p>
                   <p className="text-xs text-muted-foreground truncate">
-                    {selectedRecipientData.company} · {selectedRecipientData.floor?.name || ''} Sala {selectedRecipientData.room}
+                    {companyOf(selectedRecipientData)} · {selectedRecipientData.floor?.name || ''} Sala {selectedRecipientData.room}
                   </p>
                 </div>
                 <Button
@@ -283,7 +297,7 @@ export default function SendNotification() {
                         >
                           <p className="font-medium text-sm">{p.full_name}</p>
                           <p className="text-xs text-muted-foreground">
-                            {p.company} · {p.floor?.name || ''} Sala {p.room}
+                            {companyOf(p)} · {p.floor?.name || ''} Sala {p.room}
                           </p>
                         </button>
                       ))

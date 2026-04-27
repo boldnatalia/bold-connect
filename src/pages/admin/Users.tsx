@@ -43,9 +43,13 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useFloors } from '@/hooks/useFloors';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Loader2, Search, UserPlus, MoreVertical, UserX, UserCheck, Trash2, Edit, Filter, X } from 'lucide-react';
+import { Plus, Loader2, Search, UserPlus, MoreVertical, UserX, UserCheck, Trash2, Edit, Filter, X, RefreshCw, Building2, Check, ChevronsUpDown } from 'lucide-react';
 import type { Profile } from '@/types';
 import { z } from 'zod';
+import { useCustomers } from '@/hooks/useCustomers';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { cn } from '@/lib/utils';
 
 const ITEMS_PER_PAGE = 20;
 
@@ -54,7 +58,8 @@ const userSchema = z.object({
   password: z.string().min(6, 'Senha deve ter pelo menos 6 caracteres'),
   full_name: z.string().min(3, 'Nome deve ter pelo menos 3 caracteres'),
   cpf: z.string().regex(/^\d{11}$/, 'CPF deve ter 11 dígitos'),
-  company: z.string().min(2, 'Empresa deve ter pelo menos 2 caracteres'),
+  company: z.string().min(2, 'Selecione uma empresa'),
+  conexa_customer_id: z.string().uuid('Selecione uma empresa do Conexa'),
   floor_id: z.string().uuid('Selecione um andar'),
   room: z.string().min(1, 'Informe a sala'),
 });
@@ -62,7 +67,8 @@ const userSchema = z.object({
 const editUserSchema = z.object({
   full_name: z.string().min(3, 'Nome deve ter pelo menos 3 caracteres'),
   cpf: z.string().regex(/^\d{11}$/, 'CPF deve ter 11 dígitos'),
-  company: z.string().min(2, 'Empresa deve ter pelo menos 2 caracteres'),
+  company: z.string().min(2, 'Selecione uma empresa'),
+  conexa_customer_id: z.string().uuid('Selecione uma empresa do Conexa').optional().or(z.literal('')),
   floor_id: z.string().uuid('Selecione um andar'),
   room: z.string().min(1, 'Informe a sala'),
 });
@@ -73,6 +79,10 @@ export default function AdminUsers() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { floors } = useFloors();
+  const { customers, isLoading: customersLoading, refetch: refetchCustomers } = useCustomers();
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [companyPickerOpen, setCompanyPickerOpen] = useState(false);
+  const [editCompanyPickerOpen, setEditCompanyPickerOpen] = useState(false);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -90,6 +100,7 @@ export default function AdminUsers() {
     full_name: '',
     cpf: '',
     company: '',
+    conexa_customer_id: '',
     floor_id: '',
     room: '',
   });
@@ -98,9 +109,32 @@ export default function AdminUsers() {
     full_name: '',
     cpf: '',
     company: '',
+    conexa_customer_id: '',
     floor_id: '',
     room: '',
   });
+
+  const handleSyncConexa = async () => {
+    setIsSyncing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('conexa-sync');
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      await refetchCustomers();
+      toast({
+        title: '✓ Base sincronizada',
+        description: `${data.customers} empresas e ${data.persons} pessoas atualizadas.`,
+      });
+    } catch (e: any) {
+      toast({
+        title: 'Erro ao sincronizar',
+        description: e?.message || 'Tente novamente em instantes.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSyncing(false);
+    }
+  };
 
   // Fetch all profiles (admin only)
   const { data: profiles = [], isLoading } = useQuery({
@@ -169,6 +203,7 @@ export default function AdminUsers() {
         full_name: data.full_name,
         cpf: data.cpf,
         company: data.company,
+        conexa_customer_id: data.conexa_customer_id || null,
         floor_id: data.floor_id,
         room: data.room,
       });
@@ -204,6 +239,7 @@ export default function AdminUsers() {
           full_name: data.full_name,
           cpf: data.cpf,
           company: data.company,
+          conexa_customer_id: data.conexa_customer_id || null,
           floor_id: data.floor_id,
           room: data.room,
         })
@@ -294,6 +330,7 @@ export default function AdminUsers() {
       full_name: '',
       cpf: '',
       company: '',
+      conexa_customer_id: '',
       floor_id: '',
       room: '',
     });
@@ -344,6 +381,7 @@ export default function AdminUsers() {
       full_name: profile.full_name,
       cpf: profile.cpf,
       company: profile.company,
+      conexa_customer_id: (profile as any).conexa_customer_id || '',
       floor_id: profile.floor_id || '',
       room: profile.room,
     });
@@ -450,6 +488,20 @@ export default function AdminUsers() {
             )}
           </div>
 
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleSyncConexa}
+            disabled={isSyncing}
+            className="w-full border-primary/40 text-primary hover:bg-primary/10 hover:text-primary"
+          >
+            {isSyncing ? (
+              <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Sincronizando base Conexa...</>
+            ) : (
+              <><RefreshCw className="mr-2 h-4 w-4" />Sincronizar Base Conexa</>
+            )}
+          </Button>
+
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
             <DialogTrigger asChild>
               <Button className="w-full" onClick={() => { resetForm(); setIsCreateDialogOpen(true); }}>
@@ -516,13 +568,65 @@ export default function AdminUsers() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="company">Empresa *</Label>
-                  <Input
-                    id="company"
-                    placeholder="Nome da empresa"
-                    value={formData.company}
-                    onChange={(e) => setFormData({ ...formData, company: e.target.value })}
-                  />
+                  <Label>Empresa (Conexa) *</Label>
+                  <Popover open={companyPickerOpen} onOpenChange={setCompanyPickerOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        role="combobox"
+                        className="w-full justify-between font-normal"
+                      >
+                        <span className="truncate">
+                          {formData.conexa_customer_id
+                            ? (customers.find(c => c.id === formData.conexa_customer_id)?.trade_name
+                                || customers.find(c => c.id === formData.conexa_customer_id)?.name
+                                || 'Empresa selecionada')
+                            : (customersLoading ? 'Carregando empresas...' : 'Selecione uma empresa')}
+                        </span>
+                        <ChevronsUpDown className="h-4 w-4 opacity-50 shrink-0 ml-2" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                      <Command>
+                        <CommandInput placeholder="Buscar empresa..." />
+                        <CommandList>
+                          <CommandEmpty>
+                            {customers.length === 0
+                              ? 'Nenhuma empresa. Sincronize a base Conexa.'
+                              : 'Nenhuma empresa encontrada.'}
+                          </CommandEmpty>
+                          <CommandGroup>
+                            {customers.map(c => (
+                              <CommandItem
+                                key={c.id}
+                                value={`${c.name} ${c.trade_name ?? ''} ${c.document ?? ''}`}
+                                onSelect={() => {
+                                  setFormData({
+                                    ...formData,
+                                    conexa_customer_id: c.id,
+                                    company: c.trade_name || c.name,
+                                  });
+                                  setCompanyPickerOpen(false);
+                                }}
+                              >
+                                <Check className={cn('mr-2 h-4 w-4', formData.conexa_customer_id === c.id ? 'opacity-100' : 'opacity-0')} />
+                                <div className="min-w-0">
+                                  <p className="text-sm font-medium truncate">{c.trade_name || c.name}</p>
+                                  {c.trade_name && c.name !== c.trade_name && (
+                                    <p className="text-xs text-muted-foreground truncate">{c.name}</p>
+                                  )}
+                                </div>
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                  <p className="text-xs text-muted-foreground">
+                    {customers.length} empresa(s) ativa(s) no Conexa
+                  </p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
@@ -761,13 +865,60 @@ export default function AdminUsers() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="edit_company">Empresa *</Label>
-                <Input
-                  id="edit_company"
-                  placeholder="Nome da empresa"
-                  value={editFormData.company}
-                  onChange={(e) => setEditFormData({ ...editFormData, company: e.target.value })}
-                />
+                <Label>Empresa (Conexa) *</Label>
+                <Popover open={editCompanyPickerOpen} onOpenChange={setEditCompanyPickerOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      role="combobox"
+                      className="w-full justify-between font-normal"
+                    >
+                      <span className="truncate">
+                        {editFormData.conexa_customer_id
+                          ? (customers.find(c => c.id === editFormData.conexa_customer_id)?.trade_name
+                              || customers.find(c => c.id === editFormData.conexa_customer_id)?.name
+                              || editFormData.company)
+                          : (editFormData.company || 'Selecione uma empresa')}
+                      </span>
+                      <ChevronsUpDown className="h-4 w-4 opacity-50 shrink-0 ml-2" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                    <Command>
+                      <CommandInput placeholder="Buscar empresa..." />
+                      <CommandList>
+                        <CommandEmpty>
+                          {customers.length === 0 ? 'Sincronize a base Conexa.' : 'Nenhuma empresa encontrada.'}
+                        </CommandEmpty>
+                        <CommandGroup>
+                          {customers.map(c => (
+                            <CommandItem
+                              key={c.id}
+                              value={`${c.name} ${c.trade_name ?? ''} ${c.document ?? ''}`}
+                              onSelect={() => {
+                                setEditFormData({
+                                  ...editFormData,
+                                  conexa_customer_id: c.id,
+                                  company: c.trade_name || c.name,
+                                });
+                                setEditCompanyPickerOpen(false);
+                              }}
+                            >
+                              <Check className={cn('mr-2 h-4 w-4', editFormData.conexa_customer_id === c.id ? 'opacity-100' : 'opacity-0')} />
+                              <div className="min-w-0">
+                                <p className="text-sm font-medium truncate">{c.trade_name || c.name}</p>
+                                {c.trade_name && c.name !== c.trade_name && (
+                                  <p className="text-xs text-muted-foreground truncate">{c.name}</p>
+                                )}
+                              </div>
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
