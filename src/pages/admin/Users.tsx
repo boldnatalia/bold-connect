@@ -851,13 +851,60 @@ export default function AdminUsers() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="edit_company">Empresa *</Label>
-                <Input
-                  id="edit_company"
-                  placeholder="Nome da empresa"
-                  value={editFormData.company}
-                  onChange={(e) => setEditFormData({ ...editFormData, company: e.target.value })}
-                />
+                <Label>Empresa (Conexa) *</Label>
+                <Popover open={editCompanyPickerOpen} onOpenChange={setEditCompanyPickerOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      role="combobox"
+                      className="w-full justify-between font-normal"
+                    >
+                      <span className="truncate">
+                        {editFormData.conexa_customer_id
+                          ? (customers.find(c => c.id === editFormData.conexa_customer_id)?.trade_name
+                              || customers.find(c => c.id === editFormData.conexa_customer_id)?.name
+                              || editFormData.company)
+                          : (editFormData.company || 'Selecione uma empresa')}
+                      </span>
+                      <ChevronsUpDown className="h-4 w-4 opacity-50 shrink-0 ml-2" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                    <Command>
+                      <CommandInput placeholder="Buscar empresa..." />
+                      <CommandList>
+                        <CommandEmpty>
+                          {customers.length === 0 ? 'Sincronize a base Conexa.' : 'Nenhuma empresa encontrada.'}
+                        </CommandEmpty>
+                        <CommandGroup>
+                          {customers.map(c => (
+                            <CommandItem
+                              key={c.id}
+                              value={`${c.name} ${c.trade_name ?? ''} ${c.document ?? ''}`}
+                              onSelect={() => {
+                                setEditFormData({
+                                  ...editFormData,
+                                  conexa_customer_id: c.id,
+                                  company: c.trade_name || c.name,
+                                });
+                                setEditCompanyPickerOpen(false);
+                              }}
+                            >
+                              <Check className={cn('mr-2 h-4 w-4', editFormData.conexa_customer_id === c.id ? 'opacity-100' : 'opacity-0')} />
+                              <div className="min-w-0">
+                                <p className="text-sm font-medium truncate">{c.trade_name || c.name}</p>
+                                {c.trade_name && c.name !== c.trade_name && (
+                                  <p className="text-xs text-muted-foreground truncate">{c.name}</p>
+                                )}
+                              </div>
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
