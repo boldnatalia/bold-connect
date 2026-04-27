@@ -170,6 +170,7 @@ export default function AdminTickets() {
 
   const openTicketDetails = (ticket: Ticket) => {
     setSelectedTicket(ticket);
+    markTicketSeenByAdmin(ticket.id);
   };
 
   return (
@@ -218,22 +219,35 @@ export default function AdminTickets() {
           </div>
         ) : filteredTickets.length > 0 ? (
           <div className="space-y-3">
-            {filteredTickets.map((ticket) => (
+            {filteredTickets.map((ticket) => {
+              const hasNew = hasUnreadClientUpdate(ticket.id, ticket.last_client_comment_at);
+              return (
               <Card 
                 key={ticket.id} 
-                className="active:scale-[0.99] transition-transform"
+                className={cn(
+                  "active:scale-[0.99] transition-transform",
+                  hasNew && "ring-2 ring-destructive/60"
+                )}
                 onClick={() => openTicketDetails(ticket)}
               >
                 <CardContent className="p-4">
                   <div className="space-y-3">
                     {/* Status and time */}
                     <div className="flex items-center justify-between gap-2">
-                      <Badge 
-                        variant="outline" 
-                        className={cn('text-xs', getStatusClass(ticket.status))}
-                      >
-                        {TICKET_STATUS_LABELS[ticket.status]}
-                      </Badge>
+                      <div className="flex items-center gap-2">
+                        <Badge 
+                          variant="outline" 
+                          className={cn('text-xs', getStatusClass(ticket.status))}
+                        >
+                          {TICKET_STATUS_LABELS[ticket.status]}
+                        </Badge>
+                        {hasNew && (
+                          <Badge variant="destructive" className="text-[10px] gap-1 px-2 py-0.5 animate-pulse">
+                            <MessageCircle className="h-3 w-3" />
+                            Nova mensagem
+                          </Badge>
+                        )}
+                      </div>
                       <span className="text-xs text-muted-foreground flex items-center gap-1">
                         <Clock className="h-3 w-3" />
                         {formatDistanceToNow(new Date(ticket.created_at), {
