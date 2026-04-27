@@ -133,7 +133,7 @@ export default function SendNotification() {
     return (
       <AppLayout title="Confirmar Envio">
         <div className="min-h-[calc(100dvh-56px)] bg-[#F8F9FA] dark:bg-muted/30">
-          <div className="p-4 pb-32 space-y-4">
+          <div className="p-4 pb-[180px] space-y-4">
             <button
               onClick={() => setStep(1)}
               className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground min-h-[44px] -ml-1 px-1"
@@ -204,8 +204,8 @@ export default function SendNotification() {
             </Card>
           </div>
 
-          {/* Sticky confirm button */}
-          <div className="fixed bottom-0 left-0 right-0 max-w-lg mx-auto p-4 bg-[#F8F9FA]/95 dark:bg-background/95 backdrop-blur border-t border-border/60">
+          {/* Sticky confirm button — sits above the 56px BottomNav */}
+          <div className="fixed bottom-[56px] left-0 right-0 max-w-lg mx-auto p-4 bg-[#F8F9FA]/95 dark:bg-background/95 backdrop-blur border-t border-border/60 z-40">
             <Button
               onClick={handleSend}
               disabled={isSending || justSent}
@@ -228,7 +228,7 @@ export default function SendNotification() {
   // ============ STEP 1: Pick recipient + message ============
   return (
     <AppLayout title="Nova Notificação" showBack>
-      <div className="p-4 space-y-4 pb-8">
+      <div className="p-4 space-y-4 pb-[120px]">
         {/* Recipient */}
         <Card className="rounded-2xl border-border/60 shadow-sm">
           <CardHeader className="pb-3">

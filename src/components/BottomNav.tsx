@@ -43,7 +43,7 @@ const centralAtendimentoNavItems: NavItem[] = [
 
 const receptionNavItems: NavItem[] = [
   { icon: Home, label: 'Início', href: '/recepcao' },
-  { icon: Send, label: 'Avisar Cliente', href: '/recepcao/enviar' },
+  { icon: Send, label: 'Notificar', href: '/recepcao/enviar' },
   { icon: History, label: 'Histórico', href: '/recepcao/historico' },
 ];
 
