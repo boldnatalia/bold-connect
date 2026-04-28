@@ -64,17 +64,17 @@ const App = () => (
 
             {/* Protected client routes */}
             <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
-            <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-            <Route path="/tickets" element={<ProtectedRoute><Tickets /></ProtectedRoute>} />
-            <Route path="/tickets/:id" element={<ProtectedRoute><TicketDetail /></ProtectedRoute>} />
-            <Route path="/tickets/new" element={<ProtectedRoute><NewTicket /></ProtectedRoute>} />
+            <Route path="/profile" element={<ProtectedRoute requireRole="cliente"><Profile /></ProtectedRoute>} />
+            <Route path="/tickets" element={<ProtectedRoute requireRole="cliente"><Tickets /></ProtectedRoute>} />
+            <Route path="/tickets/:id" element={<ProtectedRoute requireRole="cliente"><TicketDetail /></ProtectedRoute>} />
+            <Route path="/tickets/new" element={<ProtectedRoute requireRole="cliente"><NewTicket /></ProtectedRoute>} />
             <Route path="/announcements" element={<ProtectedRoute><Announcements /></ProtectedRoute>} />
             <Route path="/menu" element={<ProtectedRoute><Menu /></ProtectedRoute>} />
             <Route path="/floors" element={<ProtectedRoute><Floors /></ProtectedRoute>} />
             <Route path="/floors/:floorNumber/galeria" element={<ProtectedRoute><FloorGallery /></ProtectedRoute>} />
             <Route path="/manual" element={<ProtectedRoute><Manual /></ProtectedRoute>} />
             <Route path="/meeting-rooms" element={<ProtectedRoute><MeetingRooms /></ProtectedRoute>} />
-            <Route path="/reserva-salas" element={<ProtectedRoute><RoomBooking /></ProtectedRoute>} />
+            <Route path="/reserva-salas" element={<ProtectedRoute requireRole="cliente"><RoomBooking /></ProtectedRoute>} />
 
             {/* Protected Central de Atendimento (admin) routes */}
             <Route path="/admin" element={<ProtectedRoute requireAdmin><AdminDashboard /></ProtectedRoute>} />
