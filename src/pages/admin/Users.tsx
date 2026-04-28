@@ -567,7 +567,7 @@ export default function AdminUsers() {
 
                 <div className="space-y-2">
                   <Label>Empresa (Conexa) *</Label>
-                  <Popover open={companyPickerOpen} onOpenChange={setCompanyPickerOpen}>
+                  <Popover modal open={companyPickerOpen} onOpenChange={setCompanyPickerOpen}>
                     <PopoverTrigger asChild>
                       <Button
                         type="button"
@@ -633,7 +633,7 @@ export default function AdminUsers() {
                 {formData.conexa_customer_id && (
                   <div className="space-y-2">
                     <Label>Pessoa Vinculada (Conexa) *</Label>
-                    <Popover open={personPickerOpen} onOpenChange={setPersonPickerOpen}>
+                    <Popover modal open={personPickerOpen} onOpenChange={setPersonPickerOpen}>
                       <PopoverTrigger asChild>
                         <Button
                           type="button"
@@ -1001,7 +1001,7 @@ export default function AdminUsers() {
 
               <div className="space-y-2">
                 <Label>Empresa (Conexa) *</Label>
-                <Popover open={editCompanyPickerOpen} onOpenChange={setEditCompanyPickerOpen}>
+                <Popover modal open={editCompanyPickerOpen} onOpenChange={setEditCompanyPickerOpen}>
                   <PopoverTrigger asChild>
                     <Button
                       type="button"
@@ -1060,7 +1060,7 @@ export default function AdminUsers() {
               {editFormData.conexa_customer_id && (
                 <div className="space-y-2">
                   <Label>Pessoa Vinculada (Conexa)</Label>
-                  <Popover open={editPersonPickerOpen} onOpenChange={setEditPersonPickerOpen}>
+                  <Popover modal open={editPersonPickerOpen} onOpenChange={setEditPersonPickerOpen}>
                     <PopoverTrigger asChild>
                       <Button
                         type="button"
