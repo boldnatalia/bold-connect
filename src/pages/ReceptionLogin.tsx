@@ -9,6 +9,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import logoIcon from '@/assets/logo-icon.jpeg';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function ReceptionLogin() {
   const [email, setEmail] = useState('');
@@ -36,6 +37,25 @@ export default function ReceptionLogin() {
       return;
     }
 
+    // Validate role: only 'recepcao' (or admin/central as supervisors) allowed
+    const { data: { user: authedUser } } = await supabase.auth.getUser();
+    if (authedUser) {
+      const { data: roleRow } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', authedUser.id)
+        .single();
+
+      const role = roleRow?.role;
+      if (role !== 'recepcao' && role !== 'admin' && role !== 'central_atendimento') {
+        await supabase.auth.signOut();
+        setIsLoading(false);
+        setError('Acesso restrito à equipe de recepção.');
+        return;
+      }
+    }
+
+    setIsLoading(false);
     navigate('/recepcao');
   };
 

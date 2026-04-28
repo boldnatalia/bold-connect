@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -43,17 +44,39 @@ export default function Login() {
 
     setIsLoading(true);
     const { error } = await signIn(email, password);
-    setIsLoading(false);
 
     if (error) {
+      setIsLoading(false);
       if (error.message.includes('Invalid login credentials')) {
         setError('Email ou senha incorretos');
       } else {
         setError('Erro ao fazer login. Tente novamente.');
       }
-    } else {
-      navigate('/');
+      return;
     }
+
+    // Validate role: only 'tenant' (cliente) is allowed on /login
+    const { data: { user: authedUser } } = await supabase.auth.getUser();
+    if (authedUser) {
+      const { data: roleRow } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', authedUser.id)
+        .single();
+
+      const role = roleRow?.role;
+      if (role !== 'tenant') {
+        await supabase.auth.signOut();
+        setIsLoading(false);
+        setError(
+          'Esta área é exclusiva para clientes. Use o acesso correspondente ao seu perfil.'
+        );
+        return;
+      }
+    }
+
+    setIsLoading(false);
+    navigate('/');
   };
 
   return (
