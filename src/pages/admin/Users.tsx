@@ -579,10 +579,10 @@ export default function AdminUsers() {
                         <ChevronsUpDown className="h-4 w-4 opacity-50 shrink-0 ml-2" />
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                    <PopoverContent className="w-[--radix-popover-trigger-width] p-0 max-h-[70vh] overflow-hidden" align="start" sideOffset={4} avoidCollisions>
                       <Command>
                         <CommandInput placeholder="Buscar empresa..." />
-                        <CommandList>
+                        <CommandList className="max-h-[60vh] overflow-y-auto overscroll-contain" style={{ WebkitOverflowScrolling: "touch" } as any}>
                           <CommandEmpty>
                             {customers.length === 0
                               ? 'Nenhuma empresa. Sincronize a base Conexa.'
@@ -644,10 +644,10 @@ export default function AdminUsers() {
                           <ChevronsUpDown className="h-4 w-4 opacity-50 shrink-0 ml-2" />
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                      <PopoverContent className="w-[--radix-popover-trigger-width] p-0 max-h-[70vh] overflow-hidden" align="start" sideOffset={4} avoidCollisions>
                         <Command>
                           <CommandInput placeholder="Buscar pessoa..." />
-                          <CommandList>
+                          <CommandList className="max-h-[60vh] overflow-y-auto overscroll-contain" style={{ WebkitOverflowScrolling: "touch" } as any}>
                             <CommandEmpty>Nenhuma pessoa encontrada.</CommandEmpty>
                             <CommandGroup>
                               {createPersons.map(person => (
@@ -1013,10 +1013,10 @@ export default function AdminUsers() {
                       <ChevronsUpDown className="h-4 w-4 opacity-50 shrink-0 ml-2" />
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                  <PopoverContent className="w-[--radix-popover-trigger-width] p-0 max-h-[70vh] overflow-hidden" align="start" sideOffset={4} avoidCollisions>
                     <Command>
                       <CommandInput placeholder="Buscar empresa..." />
-                      <CommandList>
+                      <CommandList className="max-h-[60vh] overflow-y-auto overscroll-contain" style={{ WebkitOverflowScrolling: "touch" } as any}>
                         <CommandEmpty>
                           {customers.length === 0 ? 'Sincronize a base Conexa.' : 'Nenhuma empresa encontrada.'}
                         </CommandEmpty>
@@ -1071,10 +1071,10 @@ export default function AdminUsers() {
                         <ChevronsUpDown className="h-4 w-4 opacity-50 shrink-0 ml-2" />
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                    <PopoverContent className="w-[--radix-popover-trigger-width] p-0 max-h-[70vh] overflow-hidden" align="start" sideOffset={4} avoidCollisions>
                       <Command>
                         <CommandInput placeholder="Buscar pessoa..." />
-                        <CommandList>
+                        <CommandList className="max-h-[60vh] overflow-y-auto overscroll-contain" style={{ WebkitOverflowScrolling: "touch" } as any}>
                           <CommandEmpty>Nenhuma pessoa encontrada.</CommandEmpty>
                           <CommandGroup>
                             {editPersons.map(person => (
