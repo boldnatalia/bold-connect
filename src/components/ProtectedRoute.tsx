@@ -30,8 +30,8 @@ export function ProtectedRoute({ children, requireAdmin = false, requireRole }: 
     return <Navigate to="/welcome" state={{ from: location }} replace />;
   }
 
-  // Auto-redirect based on role for root path
-  if (location.pathname === '/' && !requireRole) {
+  // Auto-redirect staff away from client routes when no specific role required
+  if (location.pathname === '/' && !requireRole && !requireAdmin) {
     if (isCentralAtendimento) {
       return <Navigate to="/admin" replace />;
     }
@@ -42,6 +42,8 @@ export function ProtectedRoute({ children, requireAdmin = false, requireRole }: 
 
   // Legacy support for requireAdmin
   if (requireAdmin && !isAdmin && !isCentralAtendimento) {
+    // Recepção tentando entrar no admin -> volta para sua área
+    if (isRecepcao) return <Navigate to="/recepcao" replace />;
     return <Navigate to="/" replace />;
   }
 
@@ -49,19 +51,31 @@ export function ProtectedRoute({ children, requireAdmin = false, requireRole }: 
   if (requireRole) {
     switch (requireRole) {
       case 'admin':
-        if (!isAdmin) return <Navigate to="/" replace />;
+        if (!isAdmin) {
+          if (isRecepcao) return <Navigate to="/recepcao" replace />;
+          if (isCentralAtendimento) return <Navigate to="/admin" replace />;
+          return <Navigate to="/" replace />;
+        }
         break;
       case 'central_atendimento':
-        if (!isCentralAtendimento) return <Navigate to="/" replace />;
+        if (!isCentralAtendimento) {
+          if (isRecepcao) return <Navigate to="/recepcao" replace />;
+          return <Navigate to="/" replace />;
+        }
         break;
       case 'recepcao':
-        if (!isRecepcao && !isCentralAtendimento) return <Navigate to="/" replace />;
+        if (!isRecepcao && !isCentralAtendimento) {
+          return <Navigate to="/" replace />;
+        }
         break;
       case 'cliente':
-        if (!isCliente) return <Navigate to="/" replace />;
+        if (!isCliente) {
+          if (isCentralAtendimento) return <Navigate to="/admin" replace />;
+          if (isRecepcao) return <Navigate to="/recepcao" replace />;
+          return <Navigate to="/welcome" replace />;
+        }
         break;
       case 'staff':
-        // Staff = anyone who is not a client
         if (isCliente) return <Navigate to="/" replace />;
         break;
     }
