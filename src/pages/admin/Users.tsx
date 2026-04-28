@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, type CSSProperties, type TouchEvent, type WheelEvent } from 'react';
 import { AdminLayout } from '@/components/AdminLayout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -53,6 +53,12 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { cn } from '@/lib/utils';
 
 const ITEMS_PER_PAGE = 20;
+const pickerPopoverClass = 'w-[--radix-popover-trigger-width] p-0 overflow-hidden';
+const pickerListClass = 'max-h-[min(22rem,calc(var(--radix-popover-content-available-height)-3rem))] overflow-y-scroll overflow-x-hidden overscroll-contain touch-pan-y pr-1';
+const pickerScrollStyle = { WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' } as CSSProperties;
+const stopPickerScrollPropagation = (event: WheelEvent<HTMLDivElement> | TouchEvent<HTMLDivElement>) => {
+  event.stopPropagation();
+};
 
 const userSchema = z.object({
   email: z.string().email('Email inválido'),
@@ -561,7 +567,7 @@ export default function AdminUsers() {
 
                 <div className="space-y-2">
                   <Label>Empresa (Conexa) *</Label>
-                  <Popover open={companyPickerOpen} onOpenChange={setCompanyPickerOpen}>
+                  <Popover modal open={companyPickerOpen} onOpenChange={setCompanyPickerOpen}>
                     <PopoverTrigger asChild>
                       <Button
                         type="button"
@@ -579,10 +585,10 @@ export default function AdminUsers() {
                         <ChevronsUpDown className="h-4 w-4 opacity-50 shrink-0 ml-2" />
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-[--radix-popover-trigger-width] p-0 max-h-[70vh] overflow-hidden" align="start" sideOffset={4} avoidCollisions>
+                    <PopoverContent className={pickerPopoverClass} align="start" sideOffset={4} collisionPadding={12} avoidCollisions>
                       <Command>
                         <CommandInput placeholder="Buscar empresa..." />
-                        <CommandList className="max-h-[60vh] overflow-y-auto overscroll-contain" style={{ WebkitOverflowScrolling: "touch" } as any}>
+                        <CommandList className={pickerListClass} style={pickerScrollStyle} onWheel={stopPickerScrollPropagation} onTouchMove={stopPickerScrollPropagation}>
                           <CommandEmpty>
                             {customers.length === 0
                               ? 'Nenhuma empresa. Sincronize a base Conexa.'
@@ -627,7 +633,7 @@ export default function AdminUsers() {
                 {formData.conexa_customer_id && (
                   <div className="space-y-2">
                     <Label>Pessoa Vinculada (Conexa) *</Label>
-                    <Popover open={personPickerOpen} onOpenChange={setPersonPickerOpen}>
+                    <Popover modal open={personPickerOpen} onOpenChange={setPersonPickerOpen}>
                       <PopoverTrigger asChild>
                         <Button
                           type="button"
@@ -644,10 +650,10 @@ export default function AdminUsers() {
                           <ChevronsUpDown className="h-4 w-4 opacity-50 shrink-0 ml-2" />
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-[--radix-popover-trigger-width] p-0 max-h-[70vh] overflow-hidden" align="start" sideOffset={4} avoidCollisions>
+                      <PopoverContent className={pickerPopoverClass} align="start" sideOffset={4} collisionPadding={12} avoidCollisions>
                         <Command>
                           <CommandInput placeholder="Buscar pessoa..." />
-                          <CommandList className="max-h-[60vh] overflow-y-auto overscroll-contain" style={{ WebkitOverflowScrolling: "touch" } as any}>
+                          <CommandList className={pickerListClass} style={pickerScrollStyle} onWheel={stopPickerScrollPropagation} onTouchMove={stopPickerScrollPropagation}>
                             <CommandEmpty>Nenhuma pessoa encontrada.</CommandEmpty>
                             <CommandGroup>
                               {createPersons.map(person => (
@@ -995,7 +1001,7 @@ export default function AdminUsers() {
 
               <div className="space-y-2">
                 <Label>Empresa (Conexa) *</Label>
-                <Popover open={editCompanyPickerOpen} onOpenChange={setEditCompanyPickerOpen}>
+                <Popover modal open={editCompanyPickerOpen} onOpenChange={setEditCompanyPickerOpen}>
                   <PopoverTrigger asChild>
                     <Button
                       type="button"
@@ -1013,10 +1019,10 @@ export default function AdminUsers() {
                       <ChevronsUpDown className="h-4 w-4 opacity-50 shrink-0 ml-2" />
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-[--radix-popover-trigger-width] p-0 max-h-[70vh] overflow-hidden" align="start" sideOffset={4} avoidCollisions>
+                  <PopoverContent className={pickerPopoverClass} align="start" sideOffset={4} collisionPadding={12} avoidCollisions>
                     <Command>
                       <CommandInput placeholder="Buscar empresa..." />
-                      <CommandList className="max-h-[60vh] overflow-y-auto overscroll-contain" style={{ WebkitOverflowScrolling: "touch" } as any}>
+                      <CommandList className={pickerListClass} style={pickerScrollStyle} onWheel={stopPickerScrollPropagation} onTouchMove={stopPickerScrollPropagation}>
                         <CommandEmpty>
                           {customers.length === 0 ? 'Sincronize a base Conexa.' : 'Nenhuma empresa encontrada.'}
                         </CommandEmpty>
@@ -1054,7 +1060,7 @@ export default function AdminUsers() {
               {editFormData.conexa_customer_id && (
                 <div className="space-y-2">
                   <Label>Pessoa Vinculada (Conexa)</Label>
-                  <Popover open={editPersonPickerOpen} onOpenChange={setEditPersonPickerOpen}>
+                  <Popover modal open={editPersonPickerOpen} onOpenChange={setEditPersonPickerOpen}>
                     <PopoverTrigger asChild>
                       <Button
                         type="button"
@@ -1071,10 +1077,10 @@ export default function AdminUsers() {
                         <ChevronsUpDown className="h-4 w-4 opacity-50 shrink-0 ml-2" />
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-[--radix-popover-trigger-width] p-0 max-h-[70vh] overflow-hidden" align="start" sideOffset={4} avoidCollisions>
+                    <PopoverContent className={pickerPopoverClass} align="start" sideOffset={4} collisionPadding={12} avoidCollisions>
                       <Command>
                         <CommandInput placeholder="Buscar pessoa..." />
-                        <CommandList className="max-h-[60vh] overflow-y-auto overscroll-contain" style={{ WebkitOverflowScrolling: "touch" } as any}>
+                        <CommandList className={pickerListClass} style={pickerScrollStyle} onWheel={stopPickerScrollPropagation} onTouchMove={stopPickerScrollPropagation}>
                           <CommandEmpty>Nenhuma pessoa encontrada.</CommandEmpty>
                           <CommandGroup>
                             {editPersons.map(person => (
