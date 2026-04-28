@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, type CSSProperties, type TouchEvent, type WheelEvent } from 'react';
 import { AdminLayout } from '@/components/AdminLayout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -53,6 +53,12 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { cn } from '@/lib/utils';
 
 const ITEMS_PER_PAGE = 20;
+const pickerPopoverClass = 'w-[--radix-popover-trigger-width] p-0 overflow-hidden';
+const pickerListClass = 'max-h-[min(22rem,calc(var(--radix-popover-content-available-height)-3rem))] overflow-y-scroll overflow-x-hidden overscroll-contain touch-pan-y pr-1';
+const pickerScrollStyle = { WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' } as CSSProperties;
+const stopPickerScrollPropagation = (event: WheelEvent<HTMLDivElement> | TouchEvent<HTMLDivElement>) => {
+  event.stopPropagation();
+};
 
 const userSchema = z.object({
   email: z.string().email('Email inválido'),
