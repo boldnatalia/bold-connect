@@ -97,7 +97,7 @@ export default function Welcome() {
           </button>
 
           <p className="mt-6 text-white/90 text-base leading-relaxed font-light max-w-xs italic">
-            Escritórios corporativos desenhados para grandes decisões
+            Escritórios corporativos sob medida. Infraestrutura, segurança e facilities — sem você se preocupar com a operação.
           </p>
         </div>
 

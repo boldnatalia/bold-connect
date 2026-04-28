@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -43,7 +44,7 @@ export default function AdminLogin() {
 
     setIsLoading(true);
     const { error } = await signIn(email, password);
-    
+
     if (error) {
       setIsLoading(false);
       if (error.message.includes('Invalid login credentials')) {
@@ -53,11 +54,27 @@ export default function AdminLogin() {
       }
       return;
     }
-    
-    // Wait a bit for auth state to update and check admin status
-    setTimeout(() => {
-      setIsLoading(false);
-    }, 1000);
+
+    // Validate role: only admin/central_atendimento can use this entry
+    const { data: { user: authedUser } } = await supabase.auth.getUser();
+    if (authedUser) {
+      const { data: roleRow } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', authedUser.id)
+        .single();
+
+      const role = roleRow?.role;
+      if (role !== 'admin' && role !== 'central_atendimento') {
+        await supabase.auth.signOut();
+        setIsLoading(false);
+        setError('Acesso restrito à Central de Atendimento.');
+        return;
+      }
+    }
+
+    setIsLoading(false);
+    navigate('/admin');
   };
 
   return (

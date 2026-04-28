@@ -52,11 +52,16 @@ export function Header({ title, showBack, rightAction }: HeaderProps) {
           {title ? (
             <h1 className="font-semibold text-lg truncate">{title}</h1>
           ) : (
-            <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center shrink-0">
                 <span className="text-primary-foreground font-bold text-sm">B</span>
               </div>
-              <span className="font-semibold text-lg">Bold Workplace</span>
+              <div className="min-w-0 leading-tight">
+                <p className="font-semibold text-sm truncate">{displayName || 'Bold Workplace'}</p>
+                {profile?.company && (
+                  <p className="text-[11px] text-muted-foreground truncate">{profile.company}</p>
+                )}
+              </div>
             </div>
           )}
         </div>
