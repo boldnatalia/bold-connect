@@ -24,7 +24,7 @@ export default function ReceptionDashboard() {
   const activeAnnouncements = announcements.filter(a => a.is_active);
 
   return (
-    <AppLayout title="Portaria">
+    <AppLayout title="Recepção">
       <div className="p-4 space-y-5">
         {/* Primary action */}
         <Link to="/recepcao/enviar" className="block">
